@@ -222,28 +222,23 @@
     </div>
 
     <script>
+        // 永策租賃物件欄位 ID（2026-05-08 撈自 ap16/YongCe/property-data-kept/1?def=true）
+        // sub-table「開發業務」(stid1000109) 內部欄位待永策填一筆並建好 sub-table 後再撈
         const EID = {
-            TITLE: "1000050", ADDR: "1000055", COORD: "1000759",
-            PRICE: "1000076", LAYOUT: "1000063", USAGE: "1000060", LINK_591: "1000113",
-            STATUS: "1000707", SHARING: "1001319",
-            SUB_DEV: "_subtable_1000254",
-            DEV_NAME: "1000251",
-            DEV_PHONE: "1000252"
+            TITLE: "1000009", ADDR: "1000011", COORD: "1000036",
+            PRICE: "1000030", LAYOUT: "1000047", USAGE: "1000035", LINK_591: "1000027",
+            STATUS: "1000002", SHARING: "1000020",
+            SUB_DEV: "_subtable_1000109",  // 對應 stid1000109 開發業務（待確認）
+            DEV_NAME: "TBD",  // 待 sub-table 撈到欄位 ID 後補
+            DEV_PHONE: "TBD"
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
         const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";
-        // ⚠️ TODO: 永策 sheet schema 尚未確定（2026-05-08 永策 Ragic 全空）。
-        // 等永策填第一筆物件後，需重新撈以下 EID 與 API_URL 路徑：
-        // 1. /property-data-kept/<id> 物件總表的真正 ID（這裡先沿用 /10）
-        // 2. EID 常數（TITLE/ADDR/COORD/PRICE/LAYOUT/USAGE/LINK_591/STATUS/SHARING/SUB_DEV/DEV_NAME/DEV_PHONE）
-        const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/10";
-        const ALLIANCE_API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/27";
-        const ALLIANCE_EID = {
-            TITLE: "1001894", ADDR: "1001914", COORD: "1001931",
-            PRICE: "1001896", LAYOUT: "1001895", USAGE: "1001930",
-            DEV: "1002008", PHONE: "1002012", SIZE: "1001980"
-        };
+        const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
+        // 永策不啟用「優式聯盟他店」功能（永策本身就是聯盟成員，無「對其他聯盟分享」需求）
+        const ALLIANCE_API_URL = null;
+        const ALLIANCE_EID = {};
 
         // 自訂地標 SVG
         const MARKER_OWN = {
@@ -328,6 +323,8 @@
 
         // ========== 聯盟資料載入（從 Ragic /27 表） ==========
         async function fetchAllianceData() {
+            // 永策版：不啟用聯盟功能
+            if (!ALLIANCE_API_URL) { allianceRecords = []; return; }
             try {
                 const ts = Date.now();
                 const url = `${ALLIANCE_API_URL}?api&v=3&naming=EID&t=${ts}&filterId=103&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
@@ -362,7 +359,7 @@
 
             try {
                 const ts = new Date().getTime();
-                const fetchUrl = `${API_URL}?api&v=3&naming=EID&t=${ts}&filterId=103&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
+                const fetchUrl = `${API_URL}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
 
                 // 同時抓自家 + 聯盟資料
                 const [resp] = await Promise.all([
