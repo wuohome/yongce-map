@@ -223,14 +223,12 @@
 
     <script>
         // 永策租賃物件欄位 ID（2026-05-08 撈自 ap16/YongCe/property-data-kept/1?def=true）
-        // sub-table「開發業務」(stid1000109) 內部欄位待永策填一筆並建好 sub-table 後再撈
+        // 業務聯絡人：永策用 Ragic 內建 user 系統（fid1000060~65 負責人1-4），不另建同仁名冊。
+        // 目前地圖不顯示聯絡人按鈕；如要顯示則需 wire up fid1000060 → user lookup。
         const EID = {
             TITLE: "1000009", ADDR: "1000011", COORD: "1000036",
             PRICE: "1000030", LAYOUT: "1000047", USAGE: "1000035", LINK_591: "1000027",
-            STATUS: "1000002", SHARING: "1000020",
-            SUB_DEV: "_subtable_1000109",  // 對應 stid1000109 開發業務（待確認）
-            DEV_NAME: "TBD",  // 待 sub-table 撈到欄位 ID 後補
-            DEV_PHONE: "TBD"
+            STATUS: "1000002", SHARING: "1000020"
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
