@@ -183,14 +183,11 @@
                         <i class="fas fa-chevron-down" style="font-size:10px; color:#9ca3af;"></i>
                     </button>
                     <div id="source-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #d1d5db; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:100; margin-top:4px; overflow:hidden;">
-                        <label class="source-option" data-value="open">
-                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 永策/開放聯盟合作
-                        </label>
-                        <label class="source-option" data-value="internal">
-                            <input type="checkbox" checked> <span class="dot" style="background:#7c8590;"></span> 永策/店內合作
+                        <label class="source-option" data-value="own">
+                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 永策
                         </label>
                         <label class="source-option" data-value="alliance">
-                            <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 聯盟他店
+                            <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 聯盟他店（窩的家/心寓/享寓）
                         </label>
                     </div>
                 </div>
@@ -215,28 +212,61 @@
         </div>
         <!-- 地圖圖例 -->
         <div class="map-legend">
-            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 永策/開放聯盟合作</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #7c8590;"></div> 永策/店內合作</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 聯盟他店</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 永策</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 聯盟他店（窩的家/心寓/享寓）</div>
         </div>
     </div>
 
     <script>
         // 永策租賃物件欄位 ID（2026-05-08 撈自 ap16/YongCe/property-data-kept/1?def=true）
-        // 業務聯絡人：永策用 Ragic 內建 user 系統（fid1000060~65 負責人1-4），不另建同仁名冊。
-        // 目前地圖不顯示聯絡人按鈕；如要顯示則需 wire up fid1000060 → user lookup。
         const EID = {
             TITLE: "1000009", ADDR: "1000011", COORD: "1000036",
             PRICE: "1000030", LAYOUT: "1000047", USAGE: "1000035", LINK_591: "1000027",
-            STATUS: "1000002", SHARING: "1000020"
+            STATUS: "1000002"
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
-        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";
+        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";  // 永策 user-level admin key（跨 tenant 可讀 wuohome）
+        const XIANGYU_KEY = "ZGlvWFNFb1FKazM4OU0xd1BZR2poSEcwbExsc2JsaHB1WVZRaVBrWEp1WDBubGhJUTZvWFhoeXBza2hnbGtTTFF1NTN0UlQzR2U2TGgvbXVvR0RIdkE9PQ==";  // 享寓的 key（公開於 ufo30639-blip GitHub Pages）
         const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
-        // 永策不啟用「優式聯盟他店」功能（永策本身就是聯盟成員，無「對其他聯盟分享」需求）
-        const ALLIANCE_API_URL = null;
-        const ALLIANCE_EID = {};
+
+        // 聯盟他店多源（對永策而言，「他店」= 窩的家 + 心寓 + 享寓）
+        const ALLIANCE_SOURCES = [
+            {
+                name: "窩的家",
+                color: "#9B0C23",
+                url: "https://ap15.ragic.com/wuohome/property-data-kept/10",
+                key: RAGIC_KEY,  // 永策 admin key 跨 tenant
+                filter: null,  // 全部都要
+                map: r => ({
+                    title: r["1000050"] || "(未命名)",
+                    addr: r["1000055"] || "",
+                    coord: r["1000759"] || "",
+                    price: r["1000076"] || "",
+                    layout: r["1000063"] || "",
+                    usage: r["1000060"] || "",
+                    link591: r["1000113"] || "",
+                    company: "窩的家"
+                })
+            },
+            {
+                name: "享寓+心寓",
+                color: "#9B0C23",
+                url: "https://ap12.ragic.com/xiangyu/forms2/48",
+                key: XIANGYU_KEY,
+                filter: r => (r["1012318"] || "").trim() !== "永策不動產",  // 排除永策（已在主源）
+                map: r => ({
+                    title: r["1012261"] || "(未命名)",
+                    addr: r["1012267"] || r["1012266"] || "",
+                    coord: (r["1012352"] && r["1012353"]) ? `${r["1012352"]},${r["1012353"]}` : "",
+                    price: r["1012287"] || "",
+                    layout: r["1012274"] || "",
+                    usage: r["1012271"] || "",
+                    link591: r["1012338"] || "",
+                    company: (r["1012318"] || "").trim() || "享寓"
+                })
+            }
+        ];
 
         // 自訂地標 SVG
         const MARKER_OWN = {
@@ -319,36 +349,41 @@
             fetchData();
         }
 
-        // ========== 聯盟資料載入（從 Ragic /27 表） ==========
+        // ========== 聯盟他店資料載入（多源：窩的家 + 享寓非永策）==========
         async function fetchAllianceData() {
-            // 永策版：不啟用聯盟功能
-            if (!ALLIANCE_API_URL) { allianceRecords = []; return; }
-            try {
-                const ts = Date.now();
-                const url = `${ALLIANCE_API_URL}?api&v=3&naming=EID&t=${ts}&filterId=103&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
-                const resp = await fetch(url);
-                if (!resp.ok) { console.warn("聯盟資料載入失敗"); return; }
-                const data = await resp.json();
-                allianceRecords = Object.entries(data).map(([id, item]) => ({
-                    id: `alliance-${id}`,
-                    _isAlliance: true,
-                    _allianceDev: item[ALLIANCE_EID.DEV] || '',
-                    _alliancePhone: item[ALLIANCE_EID.PHONE] || '',
-                    _allianceSize: item[ALLIANCE_EID.SIZE] || '',
-                    [EID.TITLE]: item[ALLIANCE_EID.TITLE] || '(未命名)',
-                    [EID.ADDR]: item[ALLIANCE_EID.ADDR] || '',
-                    [EID.COORD]: item[ALLIANCE_EID.COORD] || '',
-                    [EID.PRICE]: item[ALLIANCE_EID.PRICE] || '',
-                    [EID.LAYOUT]: item[ALLIANCE_EID.LAYOUT] || '',
-                    [EID.USAGE]: item[ALLIANCE_EID.USAGE] || '',
-                    [EID.STATUS]: '',
-                    [EID.LINK_591]: ''
-                }));
-                console.log(`聯盟資料載入完成: ${allianceRecords.length} 筆`);
-            } catch (e) {
-                console.warn("聯盟資料載入錯誤:", e);
-                allianceRecords = [];
-            }
+            const ts = Date.now();
+            const all = [];
+            await Promise.all(ALLIANCE_SOURCES.map(async (src) => {
+                try {
+                    const url = `${src.url}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(src.key)}`;
+                    const resp = await fetch(url);
+                    if (!resp.ok) { console.warn(`${src.name} 載入失敗 ${resp.status}`); return; }
+                    const data = await resp.json();
+                    const entries = Object.entries(data);
+                    for (const [id, item] of entries) {
+                        if (src.filter && !src.filter(item)) continue;
+                        const m = src.map(item);
+                        all.push({
+                            id: `${src.name}-${id}`,
+                            _isAlliance: true,
+                            _allianceCompany: m.company,
+                            [EID.TITLE]: m.title,
+                            [EID.ADDR]: m.addr,
+                            [EID.COORD]: m.coord,
+                            [EID.PRICE]: m.price,
+                            [EID.LAYOUT]: m.layout,
+                            [EID.USAGE]: m.usage,
+                            [EID.STATUS]: '',
+                            [EID.LINK_591]: m.link591
+                        });
+                    }
+                    console.log(`${src.name} 載入完成: ${entries.length} 筆 (filtered: ${all.filter(x => x.id.startsWith(src.name)).length})`);
+                } catch (e) {
+                    console.warn(`${src.name} 載入錯誤:`, e);
+                }
+            }));
+            allianceRecords = all;
+            console.log(`聯盟他店 total: ${allianceRecords.length} 筆`);
         }
 
         async function fetchData() {
@@ -401,18 +436,12 @@
             let allRecords = [...fetchedRecords, ...allianceRecords];
 
             filteredRecords = allRecords.filter(item => {
-                // 來源篩選（多選）
-                const sharing = item[EID.SHARING] || '';
+                // 來源篩選：永策（own）/ 聯盟他店（alliance），不分內部層級
                 const isAlliance = item._isAlliance;
-                const isOpen = !isAlliance && sharing.includes('開放聯盟合作');
-                const isInternal = !isAlliance && sharing.includes('團隊共享');
-                const isAllianceItem = isAlliance;
-                if (isOpen && !activeSources.includes('open')) return false;
-                if (isInternal && !activeSources.includes('internal')) return false;
-                if (isAllianceItem && !activeSources.includes('alliance')) return false;
-                if (!isAlliance && !isOpen && !isInternal && !activeSources.includes('open') && !activeSources.includes('internal')) return false;
+                if (isAlliance && !activeSources.includes('alliance')) return false;
+                if (!isAlliance && !activeSources.includes('own')) return false;
 
-                // 自家物件: 狀態為「下架」則不顯示
+                // 永策物件: 狀態為「下架」則不顯示
                 if (!item._isAlliance && item[EID.STATUS] === '下架') return false;
 
                 const title = (item[EID.TITLE] || '').toLowerCase();
@@ -454,12 +483,10 @@
                 if (coord && coord.includes(',') && !isNaN(parseFloat(coord.split(',')[0]))) {
                     const [lat, lng] = coord.split(',').map(Number);
                     const isAlliance = item._isAlliance;
-                    const sharing = item[EID.SHARING] || '';
-                    const isInternal = !isAlliance && sharing.includes('團隊共享');
-                    const markerIcon = isAlliance ? MARKER_ALLIANCE : (isInternal ? MARKER_INTERNAL : MARKER_OWN);
+                    const markerIcon = isAlliance ? MARKER_ALLIANCE : MARKER_OWN;
                     const marker = new google.maps.Marker({
                         position: { lat, lng }, map: map,
-                        title: (isAlliance ? '[聯盟] ' : isInternal ? '[內部] ' : '') + item[EID.TITLE],
+                        title: (isAlliance ? `[${item._allianceCompany || '聯盟'}] ` : '') + item[EID.TITLE],
                         icon: markerIcon
                     });
                     marker.recordId = item.id;
@@ -590,12 +617,10 @@
             };
 
             const allianceBadge = isAlliance
-                ? `<span class="tag-alliance"><i class="fas fa-handshake"></i> 聯盟他店</span>`
+                ? `<span class="tag-alliance"><i class="fas fa-handshake"></i> ${item._allianceCompany || '聯盟他店'}</span>`
                 : '';
 
-            const sizeInfo = isAlliance && item._allianceSize
-                ? ` · ${item._allianceSize}坪`
-                : '';
+            const sizeInfo = '';
 
             div.innerHTML = `
                 <div class="card-header">
@@ -627,7 +652,7 @@
             const agentsHtml = getAgentsHtml(item);
 
             const allianceBanner = isAlliance
-                ? `<div style="background:#9B0C23; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-handshake"></i> 聯盟他店</div>`
+                ? `<div style="background:#9B0C23; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-handshake"></i> ${item._allianceCompany || '聯盟他店'}</div>`
                 : '';
 
             const infoContent = `
