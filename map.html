@@ -132,7 +132,7 @@
         <!-- 標題區 -->
         <div class="px-4 py-3 border-b flex justify-between items-center bg-white">
             <div class="flex items-center gap-2">
-                <div class="bg-emerald-600 text-white w-7 h-7 rounded flex items-center justify-center font-bold text-sm">策</div>
+                <div style="background-color:#b99f6b;" class="text-white w-7 h-7 rounded flex items-center justify-center font-bold text-sm">策</div>
                 <div>
                     <h2 class="text-base font-bold text-gray-800">物件列表</h2>
                     <div id="last-update-time" class="text-[10px] text-gray-400 font-normal">最後更新: --</div>
@@ -148,7 +148,7 @@
             <div class="stat-item text-blue-700">
                 <i class="fas fa-map-marker-alt"></i> 此區域: <b id="visible-count">0</b> 筆
             </div>
-            <div class="stat-item" style="color: #3a506b;">
+            <div class="stat-item" style="color: #b99f6b;">
                 <i class="fas fa-home"></i> 永策: <b id="own-count">0</b>
             </div>
             <div class="stat-item" style="color: #9B0C23;">
@@ -184,7 +184,7 @@
                     </button>
                     <div id="source-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #d1d5db; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:100; margin-top:4px; overflow:hidden;">
                         <label class="source-option" data-value="own">
-                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 永策
+                            <input type="checkbox" checked> <span class="dot" style="background:#b99f6b;"></span> 永策
                         </label>
                         <label class="source-option" data-value="alliance">
                             <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 聯盟他店（窩的家/心寓/享寓）
@@ -212,7 +212,7 @@
         </div>
         <!-- 地圖圖例 -->
         <div class="map-legend">
-            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 永策</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
             <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 聯盟他店（窩的家/心寓/享寓）</div>
         </div>
     </div>
@@ -271,7 +271,7 @@
         // 自訂地標 SVG
         const MARKER_OWN = {
             path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
-            fillColor: "#3a506b",
+            fillColor: "#b99f6b",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 2,
