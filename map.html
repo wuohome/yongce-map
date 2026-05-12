@@ -231,6 +231,11 @@
         const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
 
         // 窩的家開放物件（ap15 view21 + filterId=104，Joan 後台設定的篩選條件）
+        // ap15 子表格 _subtable_1000254：1000251=業務姓名、1000252=業務電話
+        const AP15_SUB = "_subtable_1000254";
+        const AP15_DEV_NAME = "1000251";
+        const AP15_DEV_PHONE = "1000252";
+
         const ALLIANCE_SOURCES = [
             {
                 name: "窩的家",
@@ -239,16 +244,29 @@
                 queryExtra: "&filterId=104",
                 key: RAGIC_KEY,
                 filter: null,
-                map: r => ({
-                    title: r["1000050"] || "(未命名)",
-                    addr: r["1000055"] || "",
-                    coord: r["1000759"] || "",
-                    price: r["1000076"] || "",
-                    layout: r["1000063"] || "",
-                    usage: r["1000060"] || "",
-                    link591: r["1000113"] || "",
-                    company: "窩的家"
-                })
+                map: r => {
+                    // 解析子表格業務資料（可能多筆）
+                    const subRaw = r[AP15_SUB];
+                    const agents = [];
+                    if (subRaw && typeof subRaw === 'object') {
+                        Object.values(subRaw).forEach(row => {
+                            const name = row[AP15_DEV_NAME] || '';
+                            const phone = row[AP15_DEV_PHONE] || '';
+                            if (name && phone) agents.push({ name, phone });
+                        });
+                    }
+                    return {
+                        title: r["1000050"] || "(未命名)",
+                        addr: r["1000055"] || "",
+                        coord: r["1000759"] || "",
+                        price: r["1000076"] || "",
+                        layout: r["1000063"] || "",
+                        usage: r["1000060"] || "",
+                        link591: r["1000113"] || "",
+                        company: "窩的家",
+                        agents  // [{name, phone}, ...]
+                    };
+                }
             }
         ];
 
@@ -351,6 +369,7 @@
                             id: `${src.name}-${id}`,
                             _isAlliance: true,
                             _allianceCompany: m.company,
+                            _allianceAgents: m.agents || [],  // [{name, phone}, ...]
                             [EID.TITLE]: m.title,
                             [EID.ADDR]: m.addr,
                             [EID.COORD]: m.coord,
@@ -553,18 +572,18 @@
         }
 
         function getAgentsHtml(item) {
-            // 聯盟物件的聯絡人
+            // 窩的家（聯盟）物件：從 _allianceAgents 陣列渲染，綠色按鈕
             if (item._isAlliance) {
-                if (item._allianceDev && item._alliancePhone) {
-                    return `<div class="flex flex-wrap mt-2">
-                        <a href="tel:${item._alliancePhone}" class="agent-btn" style="background-color: #9B0C23;" onclick="event.stopPropagation()">
-                            <i class="fas fa-phone-alt"></i> ${item._allianceDev}
-                        </a>
-                    </div>`;
-                }
-                return '';
+                const agents = item._allianceAgents || [];
+                if (agents.length === 0) return '';
+                let html = '<div class="flex flex-wrap mt-2">';
+                agents.forEach(({ name, phone }) => {
+                    html += `<a href="tel:${phone}" class="agent-btn" onclick="event.stopPropagation()"><i class="fas fa-phone-alt"></i> ${name}</a>`;
+                });
+                html += '</div>';
+                return html;
             }
-            // 自家物件的聯絡人
+            // 永策自家物件的聯絡人（子表格，保留原邏輯）
             const subData = item[EID.SUB_DEV];
             if (!subData) return '';
             const rows = Object.values(subData);
@@ -621,7 +640,7 @@
                     <div class="card-price">$${price} <span class="price-unit">/月</span></div>
                     <div class="flex gap-2">
                         ${hasCoord ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${item[EID.COORD]}" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 text-white py-1 px-2.5 rounded text-xs font-bold transition hover:bg-blue-700" onclick="event.stopPropagation()" title="導航"><i class="fas fa-location-arrow"></i> 導航</a>` : ''}
-                        ${!isAlliance ? `<a href="${link591}" target="_blank" class="btn-591 ${hasLink ? '' : 'btn-hidden'}" title="前往 591"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
+                        ${hasLink ? `<a href="${link591}" target="_blank" class="btn-591" title="前往 591" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
                     </div>
                 </div>`;
             container.appendChild(div);
@@ -648,7 +667,7 @@
                     <div class="flex justify-between items-center mt-2 border-t pt-2">
                         <span class="text-red-600 font-bold text-lg">$${price}</span>
                         <div class="flex gap-2">
-                            ${(!isAlliance && hasLink) ? `<a href="${link591}" target="_blank" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600" style="text-decoration:none;">591</a>` : ''}
+                            ${hasLink ? `<a href="${link591}" target="_blank" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600" style="text-decoration:none;">591</a>` : ''}
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700" style="text-decoration:none;">導航</a>
                         </div>
                     </div>
