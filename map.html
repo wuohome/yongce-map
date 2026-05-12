@@ -152,7 +152,7 @@
                 <i class="fas fa-home"></i> 永策: <b id="own-count">0</b>
             </div>
             <div class="stat-item" style="color: #9B0C23;">
-                <i class="fas fa-handshake"></i> 優式聯盟: <b id="alliance-count">0</b>
+                <i class="fas fa-building"></i> 窩的家: <b id="alliance-count">0</b>
             </div>
         </div>
 
@@ -187,7 +187,7 @@
                             <input type="checkbox" checked> <span class="dot" style="background:#b99f6b;"></span> 永策
                         </label>
                         <label class="source-option" data-value="alliance">
-                            <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 聯盟他店（窩的家/心寓/享寓）
+                            <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 窩的家開放物件
                         </label>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
         <!-- 地圖圖例 -->
         <div class="map-legend">
             <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 聯盟他店（窩的家/心寓/享寓）</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 窩的家開放物件</div>
         </div>
     </div>
 
@@ -226,18 +226,19 @@
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
-        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";  // 永策 user-level admin key（跨 tenant 可讀 wuohome）
-        const XIANGYU_KEY = "ZGlvWFNFb1FKazM4OU0xd1BZR2poSEcwbExsc2JsaHB1WVZRaVBrWEp1WDBubGhJUTZvWFhoeXBza2hnbGtTTFF1NTN0UlQzR2U2TGgvbXVvR0RIdkE9PQ==";  // 享寓的 key（公開於 ufo30639-blip GitHub Pages）
+        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap15 wuohome admin key（2026-05-12 rotate）跨 tenant 可讀 ap16 永策
+        const AP16_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";  // ap16 YongCe key（2026-05-08 rotate；user-level 同帳號）
         const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
 
-        // 聯盟他店多源（對永策而言，「他店」= 窩的家 + 心寓 + 享寓）
+        // 窩的家開放物件（ap15 view21 + filterId=104，Joan 後台設定的篩選條件）
         const ALLIANCE_SOURCES = [
             {
                 name: "窩的家",
                 color: "#9B0C23",
-                url: "https://ap15.ragic.com/wuohome/property-data-kept/10",
-                key: RAGIC_KEY,  // 永策 admin key 跨 tenant
-                filter: null,  // 全部都要
+                url: "https://ap15.ragic.com/wuohome/property-data-kept/21",
+                queryExtra: "&filterId=104",
+                key: RAGIC_KEY,
+                filter: null,
                 map: r => ({
                     title: r["1000050"] || "(未命名)",
                     addr: r["1000055"] || "",
@@ -247,23 +248,6 @@
                     usage: r["1000060"] || "",
                     link591: r["1000113"] || "",
                     company: "窩的家"
-                })
-            },
-            {
-                name: "享寓+心寓",
-                color: "#9B0C23",
-                url: "https://ap12.ragic.com/xiangyu/forms2/48",
-                key: XIANGYU_KEY,
-                filter: r => (r["1012318"] || "").trim() !== "永策不動產",  // 排除永策（已在主源）
-                map: r => ({
-                    title: r["1012261"] || "(未命名)",
-                    addr: r["1012267"] || r["1012266"] || "",
-                    coord: (r["1012352"] && r["1012353"]) ? `${r["1012352"]},${r["1012353"]}` : "",
-                    price: r["1012287"] || "",
-                    layout: r["1012274"] || "",
-                    usage: r["1012271"] || "",
-                    link591: r["1012338"] || "",
-                    company: (r["1012318"] || "").trim() || "享寓"
                 })
             }
         ];
@@ -355,7 +339,7 @@
             const all = [];
             await Promise.all(ALLIANCE_SOURCES.map(async (src) => {
                 try {
-                    const url = `${src.url}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(src.key)}`;
+                    const url = `${src.url}?api&v=3&naming=EID&t=${ts}${src.queryExtra || ""}&APIKey=${encodeURIComponent(src.key)}`;
                     const resp = await fetch(url);
                     if (!resp.ok) { console.warn(`${src.name} 載入失敗 ${resp.status}`); return; }
                     const data = await resp.json();
@@ -392,7 +376,7 @@
 
             try {
                 const ts = new Date().getTime();
-                const fetchUrl = `${API_URL}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
+                const fetchUrl = `${API_URL}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(AP16_KEY)}`;
 
                 // 同時抓自家 + 聯盟資料
                 const [resp] = await Promise.all([
@@ -700,7 +684,7 @@
         function updateSourceLabel() {
             const checked = [...document.querySelectorAll('.source-option input:checked')];
             const label = document.getElementById('source-dropdown-label');
-            if (checked.length === 3) label.textContent = '全部來源';
+            if (checked.length === 2) label.textContent = '全部來源';
             else if (checked.length === 0) label.textContent = '未選擇';
             else label.textContent = checked.map(cb => cb.closest('.source-option').textContent.trim()).join('、');
         }
@@ -789,7 +773,7 @@
                         const formData = new URLSearchParams();
                         formData.append(EID.COORD, coordStr);
 
-                        const updateUrl = `${API_URL}/${recordId}?api&v=3&APIKey=${encodeURIComponent(RAGIC_KEY)}`;
+                        const updateUrl = `${API_URL}/${recordId}?api&v=3&APIKey=${encodeURIComponent(AP16_KEY)}`;
 
                         const updateResp = await fetch(updateUrl, {
                             method: 'POST',
