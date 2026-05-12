@@ -76,13 +76,13 @@
         /* 聯盟他店標籤 */
         .tag-alliance {
             display: inline-flex; align-items: center; gap: 3px;
-            background: #9B0C23; color: white;
+            background: #3a506b; color: white;
             padding: 2px 8px; border-radius: 9999px;
             font-size: 11px; font-weight: bold;
             white-space: nowrap;
         }
-        .property-card.alliance-card { border-left: 3px solid #9B0C23; }
-        .property-card.alliance-card:hover { background: #fdf2f4; }
+        .property-card.alliance-card { border-left: 3px solid #3a506b; }
+        .property-card.alliance-card:hover { background: #f0f4f8; }
 
         /* 地圖圖例 */
         .map-legend {
@@ -151,7 +151,7 @@
             <div class="stat-item" style="color: #b99f6b;">
                 <i class="fas fa-home"></i> 永策: <b id="own-count">0</b>
             </div>
-            <div class="stat-item" style="color: #9B0C23;">
+            <div class="stat-item" style="color: #3a506b;">
                 <i class="fas fa-building"></i> 窩的家: <b id="alliance-count">0</b>
             </div>
         </div>
@@ -187,7 +187,7 @@
                             <input type="checkbox" checked> <span class="dot" style="background:#b99f6b;"></span> 永策
                         </label>
                         <label class="source-option" data-value="alliance">
-                            <input type="checkbox" checked> <span class="dot" style="background:#9B0C23;"></span> 窩的家開放物件
+                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 窩的家開放物件
                         </label>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
         <!-- 地圖圖例 -->
         <div class="map-legend">
             <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #9B0C23;"></div> 窩的家開放物件</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 窩的家開放物件</div>
         </div>
     </div>
 
@@ -239,7 +239,7 @@
         const ALLIANCE_SOURCES = [
             {
                 name: "窩的家",
-                color: "#9B0C23",
+                color: "#3a506b",
                 url: "https://ap15.ragic.com/wuohome/property-data-kept/21",
                 queryExtra: "&filterId=104",
                 key: RAGIC_KEY,
@@ -291,7 +291,7 @@
         };
         const MARKER_ALLIANCE = {
             path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
-            fillColor: "#9B0C23",
+            fillColor: "#3a506b",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 2,
@@ -655,7 +655,7 @@
             const agentsHtml = getAgentsHtml(item);
 
             const allianceBanner = isAlliance
-                ? `<div style="background:#9B0C23; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-handshake"></i> ${item._allianceCompany || '聯盟他店'}</div>`
+                ? `<div style="background:#3a506b; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-building"></i> ${item._allianceCompany || '窩的家'}</div>`
                 : '';
 
             const infoContent = `
