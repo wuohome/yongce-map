@@ -227,7 +227,7 @@
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
         const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap15 wuohome admin key（2026-05-12 rotate）跨 tenant 可讀 ap16 永策
-        const AP16_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwRkllTFlXVXlwaEpEcG1IajBXM0NiU1A0emdURlN1WFZHMDRQS28zM2F1bA==";  // ap16 YongCe key（2026-05-08 rotate；user-level 同帳號）
+        const AP16_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap16 YongCe key（2026-05-12 rotate；user-level，跟 ap15 admin 同一支）
         const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
 
         // 窩的家開放物件（ap15 view21 + filterId=104，Joan 後台設定的篩選條件）
@@ -792,11 +792,14 @@
                         const formData = new URLSearchParams();
                         formData.append(EID.COORD, coordStr);
 
-                        const updateUrl = `${API_URL}/${recordId}?api&v=3&APIKey=${encodeURIComponent(AP16_KEY)}`;
+                        const updateUrl = `${API_URL}/${recordId}?api&v=3`;
 
                         const updateResp = await fetch(updateUrl, {
                             method: 'POST',
-                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "Authorization": "Basic " + AP16_KEY
+                            },
                             body: formData.toString()
                         });
 
