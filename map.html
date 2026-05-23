@@ -864,11 +864,26 @@
                 : `<div class="modal-badge" style="background:#b99f6b;"><i class="fas fa-home" style="font-size:10px;"></i> ${company}</div>`;
 
             const allRows = rows + agentRows;
+
+            // 永策物件才顯示「在 Ragic 開啟」連結；聯盟物件是 ap15 別人後台，不加
+            const ragicLinkHtml = (!isAlliance && item._ragicId)
+                ? `<div style="margin-top:16px; text-align:center;">
+                     <a href="https://ap16.ragic.com/YongCe/property-data-kept/1/${item._ragicId}"
+                        target="_blank" rel="noopener"
+                        style="display:inline-flex; align-items:center; gap:6px;
+                               background:#9B0C23; color:white; text-decoration:none;
+                               padding:8px 18px; border-radius:6px; font-size:13px; font-weight:bold;">
+                       <i class="fas fa-external-link-alt"></i> 在 Ragic 開啟此案件 ↗
+                     </a>
+                   </div>`
+                : '';
+
             document.getElementById('detail-modal-content').innerHTML = `
                 ${badge}
                 <h2>${title}</h2>
                 <table>${allRows || '<tr><td colspan="2" style="color:#9ca3af;">無公開欄位資料</td></tr>'}</table>
                 <p style="margin-top:16px; font-size:11px; color:#d1d5db; text-align:right;">唯讀 · 僅顯示公開資訊</p>
+                ${ragicLinkHtml}
             `;
             document.getElementById('detail-modal-overlay').classList.add('open');
             document.body.style.overflow = 'hidden';
