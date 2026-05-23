@@ -85,9 +85,72 @@
             #map-container { height: 100%; order: 1; }
             #sidebar.mobile-active { display: flex; height: 60vh; position: fixed; bottom: 0; left: 0; width: 100%; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
         }
+
+        /* 完整資料 modal */
+        #detail-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55); z-index: 99999;
+            justify-content: center; align-items: center;
+        }
+        #detail-modal-overlay.open { display: flex; }
+        #detail-modal {
+            background: #fff; border-radius: 12px;
+            width: min(560px, 92vw); max-height: 82vh;
+            overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+            position: relative; padding: 24px 24px 20px;
+        }
+        #detail-modal h2 {
+            font-size: 17px; font-weight: bold; color: #1f2937;
+            margin-bottom: 16px; padding-right: 28px; line-height: 1.4;
+        }
+        #detail-modal .modal-close {
+            position: absolute; top: 14px; right: 14px;
+            background: #f3f4f6; border: none; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #6b7280; transition: background 0.2s;
+        }
+        #detail-modal .modal-close:hover { background: #e5e7eb; color: #374151; }
+        #detail-modal table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        #detail-modal table tr { border-bottom: 1px solid #f0f0f0; }
+        #detail-modal table tr:last-child { border-bottom: none; }
+        #detail-modal table td { padding: 7px 4px; vertical-align: top; }
+        #detail-modal table td:first-child {
+            width: 110px; color: #6b7280; font-size: 12px;
+            white-space: nowrap; padding-right: 12px;
+        }
+        #detail-modal table td:last-child { color: #1f2937; font-weight: 500; word-break: break-all; }
+        #detail-modal .modal-section {
+            margin-top: 14px; margin-bottom: 4px;
+            font-size: 11px; font-weight: bold; color: #9ca3af;
+            letter-spacing: 0.08em; text-transform: uppercase;
+        }
+        #detail-modal .modal-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: #3a506b; color: white;
+            padding: 2px 8px; border-radius: 9999px;
+            font-size: 11px; font-weight: bold; margin-bottom: 12px;
+        }
+        .btn-detail {
+            display: inline-flex; align-items: center; gap: 4px;
+            background-color: #9B0C23; color: white;
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 12px; font-weight: bold;
+            border: none; cursor: pointer; transition: background 0.2s;
+            text-decoration: none;
+        }
+        .btn-detail:hover { background-color: #7a0a1c; }
     </style>
 </head>
 <body>
+
+    <!-- 完整資料唯讀 modal -->
+    <div id="detail-modal-overlay" onclick="closeDetailModal(event)">
+        <div id="detail-modal">
+            <button class="modal-close" onclick="closeDetailModal(null, true)" title="關閉">&#x2715;</button>
+            <div id="detail-modal-content"></div>
+        </div>
+    </div>
 
     <div id="loading" class="loading-overlay">
         <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
@@ -180,13 +243,19 @@
         const EID = {
             TITLE: "1000009", ADDR: "1000011", COORD: "1000036",
             PRICE: "1000030", LAYOUT: "1000047", USAGE: "1000035", LINK_591: "1000027",
-            STATUS: "1000002"
+            STATUS: "1000002",
+            // 子表格（開發業務）— Worker 白名單已加回，只回姓名+電話不回 email
+            SUB_DEV:  "_subtable_1000109",
+            DEV_NAME: "1000053", // 開發人員 display name（Ragic 使用者型欄位 API 回 display name，非 email）
+            DEV_PHONE: "1000054" // 開發電話
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
-        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap15 wuohome admin key（2026-05-12 rotate）跨 tenant 可讀 ap16 永策
-        const AP16_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap16 YongCe key（2026-05-12 rotate；user-level，跟 ap15 admin 同一支）
-        const API_URL = "https://ap16.ragic.com/YongCe/property-data-kept/1";
+        // ap15 wuohome admin key: still used by ALLIANCE_SOURCES (ap15 view21 direct fetch).
+        // ap16 永策物件已改走 Cloudflare Worker proxy，前端不再持有 AP16_KEY。
+        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap15 admin key（2026-05-12 rotate）
+        // AP16_KEY removed — ap16 calls now go through Worker proxy (no key in browser)
+        const WORKER_URL = "https://wuohome-ragic-proxy.wuohome.workers.dev";
 
         // 窩的家開放物件（ap15 view21 + filterId=104，Joan 後台設定的篩選條件）
         // ap15 子表格 _subtable_1000254：1000251=業務姓名、1000252=業務電話
@@ -351,8 +420,8 @@
             loading.style.display = 'flex';
 
             try {
-                const ts = new Date().getTime();
-                const fetchUrl = `${API_URL}?api&v=3&naming=EID&t=${ts}&APIKey=${encodeURIComponent(AP16_KEY)}`;
+                // 永策自家物件改走 Cloudflare Worker proxy — 後端過濾敏感欄位，前端不持有 API key
+                const fetchUrl = `${WORKER_URL}/getYongceProperties`;
 
                 // 同時抓自家 + 聯盟資料
                 const [resp] = await Promise.all([
@@ -554,6 +623,8 @@
         }
 
         function createListItem(item, container, isNoCoord = false) {
+            // 存 reference 供 modal 使用（避免 inline JSON 注入風險）
+            window['__infoItem_' + item.id] = item;
             const div = document.createElement('div');
             const price = item[EID.PRICE] ? parseInt(item[EID.PRICE]).toLocaleString() : "面議";
             const isAlliance = item._isAlliance;
@@ -590,9 +661,10 @@
                 ${agentsHtml}
                 <div class="card-footer">
                     <div class="card-price">$${price} <span class="price-unit">/月</span></div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap justify-end">
                         ${hasCoord ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${item[EID.COORD]}" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 text-white py-1 px-2.5 rounded text-xs font-bold transition hover:bg-blue-700" onclick="event.stopPropagation()" title="導航"><i class="fas fa-location-arrow"></i> 導航</a>` : ''}
                         ${hasLink ? `<a href="${link591}" target="_blank" class="btn-591" title="前往 591" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
+                        <button class="btn-detail" onclick="event.stopPropagation(); openDetailModal(window.__infoItem_${item.id})"><i class="fas fa-file-alt"></i> 完整資料</button>
                     </div>
                 </div>`;
             container.appendChild(div);
@@ -610,6 +682,7 @@
                 ? `<div style="background:#3a506b; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-building"></i> ${item._allianceCompany || '窩的家'}</div>`
                 : '';
 
+            const itemJson = JSON.stringify(item).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             const infoContent = `
                 <div style="padding: 5px; min-width: 200px;">
                     ${allianceBanner}
@@ -618,12 +691,14 @@
                     ${agentsHtml}
                     <div class="flex justify-between items-center mt-2 border-t pt-2">
                         <span class="text-red-600 font-bold text-lg">$${price}</span>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap justify-end">
                             ${hasLink ? `<a href="${link591}" target="_blank" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600" style="text-decoration:none;">591</a>` : ''}
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700" style="text-decoration:none;">導航</a>
+                            <button onclick="openDetailModal(window.__infoItem_${item.id})" class="text-xs px-2 py-1 rounded text-white font-bold" style="background:#9B0C23; border:none; cursor:pointer;">完整資料</button>
                         </div>
                     </div>
                 </div>`;
+            window['__infoItem_' + item.id] = item;
 
             if (activeInfoWindow) activeInfoWindow.close();
             const infoWindow = new google.maps.InfoWindow({ content: infoContent });
@@ -678,6 +753,136 @@
             const el = document.getElementById('last-update-time');
             if(lastTime) el.innerText = `最後更新: ${lastTime}`;
         }
+
+        // ========== 完整資料唯讀 modal ==========
+
+        // 永策物件公開欄位白名單（欄位編號 → 顯示標籤）
+        // 排除：開發人員 email / 業務電話 / 委託書號 / 內部 ID / 進屋方式 / 委託類型 / 業績比例 / 群組權限
+        const YONGCE_PUBLIC_FIELDS = [
+            { id: "1000002", label: "狀態" },
+            { id: "1000009", label: "案名" },
+            { id: "1000011", label: "地址" },
+            { id: "1000035", label: "物件用途" },
+            { id: "1000034", label: "物件型態" },
+            { id: "1000037", label: "物件類別" },
+            { id: "1000047", label: "格局" },
+            { id: "1000043", label: "所在樓層" },
+            { id: "1000044", label: "總樓層" },
+            { id: "1000030", label: "月租金", currency: true },
+            { id: "1000032", label: "押金金額", currency: true },
+            { id: "1000031", label: "租金內含", isArray: true },
+            { id: "1000033", label: "房屋現況", isArray: true },
+            { id: "1000039", label: "車位形式" },
+            { id: "1000085", label: "寵物" },
+            { id: "1000086", label: "抽菸" },
+            { id: "1000079", label: "開伙" },
+            { id: "1000081", label: "入戶籍" },
+            { id: "1000083", label: "租屋補助" },
+            { id: "1000072", label: "水費" },
+            { id: "1000074", label: "電費" },
+            { id: "1000076", label: "瓦斯費" },
+            { id: "1000077", label: "第四台" },
+            { id: "1000078", label: "網路" },
+            { id: "1000080", label: "費用註記" },
+            { id: "1000050", label: "特殊說明" },
+            { id: "1000097", label: "捷運站" },
+            { id: "1000098", label: "學區" },
+            { id: "1000099", label: "公車站" },
+            { id: "1000100", label: "公園" },
+            { id: "1000101", label: "市場" },
+            { id: "1000102", label: "商圈" },
+            { id: "1000027", label: "591連結", isLink: true },
+        ];
+
+        // 窩的家開放物件：item 已經過 map() 轉換成 EID-keyed 形式
+        // 可顯示的欄位就是 showInfoWindow 已顯示的 + 公開物件資訊
+        const WUOHOME_PUBLIC_FIELDS = [
+            { id: EID.STATUS,  label: "狀態" },
+            { id: EID.TITLE,   label: "案名" },
+            { id: EID.ADDR,    label: "地址" },
+            { id: EID.USAGE,   label: "物件用途" },
+            { id: EID.LAYOUT,  label: "格局" },
+            { id: EID.PRICE,   label: "月租金", currency: true },
+            { id: EID.LINK_591,label: "591連結", isLink: true },
+        ];
+
+        function formatFieldValue(val, def) {
+            if (val === null || val === undefined) return null;
+            if (def.isArray) {
+                if (Array.isArray(val)) return val.filter(Boolean).join('、') || null;
+                if (typeof val === 'string') return val.replace(/\|/g, '、') || null;
+                return null;
+            }
+            if (def.currency) {
+                const n = parseFloat(val);
+                if (isNaN(n) || n === 0) return null;
+                return '$' + n.toLocaleString();
+            }
+            if (def.isLink) {
+                const s = String(val || '').trim();
+                if (!s || !s.startsWith('http')) return null;
+                return `<a href="${s}" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">${s}</a>`;
+            }
+            const s = String(val).trim();
+            return s || null;
+        }
+
+        function openDetailModal(item) {
+            const isAlliance = item._isAlliance;
+            const fields = isAlliance ? WUOHOME_PUBLIC_FIELDS : YONGCE_PUBLIC_FIELDS;
+            const title = item[EID.TITLE] || '(未命名)';
+            const company = isAlliance ? (item._allianceCompany || '窩的家') : '永策不動產';
+
+            let rows = '';
+            fields.forEach(def => {
+                const raw = item[def.id];
+                const formatted = formatFieldValue(raw, def);
+                if (!formatted) return;
+                rows += `<tr><td>${def.label}</td><td>${formatted}</td></tr>`;
+            });
+
+            // 永策物件：從子表格 _subtable_1000109 組業務聯絡行
+            // Worker 已過濾，每 row 只剩 1000053(姓名) + 1000054(電話)，email 不在其中
+            let agentRows = '';
+            if (!isAlliance) {
+                const subData = item[EID.SUB_DEV];
+                if (subData && typeof subData === 'object') {
+                    Object.values(subData).forEach(row => {
+                        const name = (row[EID.DEV_NAME] || '').trim();
+                        const phone = (row[EID.DEV_PHONE] || '').trim();
+                        if (!name && !phone) return;
+                        const display = name
+                            ? (phone ? `${name}　<a href="tel:${phone}" style="color:#2563eb;">${phone}</a>` : name)
+                            : phone;
+                        agentRows += `<tr><td>業務聯絡</td><td>${display}</td></tr>`;
+                    });
+                }
+            }
+
+            const badge = isAlliance
+                ? `<div class="modal-badge"><i class="fas fa-building" style="font-size:10px;"></i> ${company}</div>`
+                : `<div class="modal-badge" style="background:#b99f6b;"><i class="fas fa-home" style="font-size:10px;"></i> ${company}</div>`;
+
+            const allRows = rows + agentRows;
+            document.getElementById('detail-modal-content').innerHTML = `
+                ${badge}
+                <h2>${title}</h2>
+                <table>${allRows || '<tr><td colspan="2" style="color:#9ca3af;">無公開欄位資料</td></tr>'}</table>
+                <p style="margin-top:16px; font-size:11px; color:#d1d5db; text-align:right;">唯讀 · 僅顯示公開資訊</p>
+            `;
+            document.getElementById('detail-modal-overlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDetailModal(e, force) {
+            if (!force && e && e.target !== document.getElementById('detail-modal-overlay')) return;
+            document.getElementById('detail-modal-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeDetailModal(null, true);
+        });
 
     </script>
 </body>
