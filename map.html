@@ -662,7 +662,7 @@
                     <div class="flex gap-2 flex-wrap justify-end">
                         ${hasCoord ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${item[EID.COORD]}" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 text-white py-1 px-2.5 rounded text-xs font-bold transition hover:bg-blue-700" onclick="event.stopPropagation()" title="導航"><i class="fas fa-location-arrow"></i> 導航</a>` : ''}
                         ${hasLink ? `<a href="${link591}" target="_blank" class="btn-591" title="前往 591" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
-                        <button class="btn-detail" onclick="event.stopPropagation(); openDetailModal(window.__infoItem_${item.id})"><i class="fas fa-file-alt"></i> 完整資料</button>
+                        <button class="btn-detail" onclick="event.stopPropagation(); openDetailModal(window['__infoItem_${item.id}'])"><i class="fas fa-file-alt"></i> 完整資料</button>
                     </div>
                 </div>`;
             container.appendChild(div);
@@ -692,7 +692,7 @@
                         <div class="flex gap-2 flex-wrap justify-end">
                             ${hasLink ? `<a href="${link591}" target="_blank" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600" style="text-decoration:none;">591</a>` : ''}
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700" style="text-decoration:none;">導航</a>
-                            <button onclick="openDetailModal(window.__infoItem_${item.id})" class="text-xs px-2 py-1 rounded text-white font-bold" style="background:#9B0C23; border:none; cursor:pointer;">完整資料</button>
+                            <button onclick="openDetailModal(window['__infoItem_${item.id}'])" class="text-xs px-2 py-1 rounded text-white font-bold" style="background:#9B0C23; border:none; cursor:pointer;">完整資料</button>
                         </div>
                     </div>
                 </div>`;
