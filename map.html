@@ -251,13 +251,11 @@
         };
 
         const MAPS_KEY = "AIzaSyALdVJlv7IBxnqeShEbzIIWnV7WSjtRtZw";
-        // ap15 wuohome admin key: still used by ALLIANCE_SOURCES (ap15 view21 direct fetch).
-        // ap16 永策物件已改走 Cloudflare Worker proxy，前端不再持有 AP16_KEY。
-        const RAGIC_KEY = "VEZsOEwzYzVJdWdoWXRDM3ptS2YwTFA1M283aGxIUHM1ZjRORmNGbDNHNi9qSnVDNnlYWlhwUmJnMnJIWGo3RQ==";  // ap15 admin key（2026-05-12 rotate）
-        // AP16_KEY removed — ap16 calls now go through Worker proxy (no key in browser)
+        // ap15 admin key REMOVED — 窩的家開放聯盟物件現在走 Cloudflare Worker proxy（getYongceAllianceProperties），前端不再持有任何 Ragic key
+        // ap16 永策物件走 getYongceProperties（已改 2026-05-22）
         const WORKER_URL = "https://wuohome-ragic-proxy.wuohome.workers.dev";
 
-        // 窩的家開放物件（ap15 view21 + filterId=104，Joan 後台設定的篩選條件）
+        // 窩的家開放物件（ap15 view21 + filterId=104）透過 Worker 後端持 key 過濾欄位
         // ap15 子表格 _subtable_1000254：1000251=業務姓名、1000252=業務電話
         const AP15_SUB = "_subtable_1000254";
         const AP15_DEV_NAME = "1000251";
@@ -267,9 +265,8 @@
             {
                 name: "窩的家",
                 color: "#3a506b",
-                url: "https://ap15.ragic.com/wuohome/property-data-kept/21",
-                queryExtra: "&filterId=104",
-                key: RAGIC_KEY,
+                // fetch URL 改走 Worker — 不再直連 Ragic，前端不持 key
+                workerAction: "getYongceAllianceProperties",
                 filter: null,
                 map: r => {
                     // 解析子表格業務資料（可能多筆）
@@ -379,14 +376,15 @@
 
         // ========== 聯盟他店資料載入（多源：窩的家 + 享寓非永策）==========
         async function fetchAllianceData() {
-            const ts = Date.now();
             const all = [];
             await Promise.all(ALLIANCE_SOURCES.map(async (src) => {
                 try {
-                    const url = `${src.url}?api&v=3&naming=EID&t=${ts}${src.queryExtra || ""}&APIKey=${encodeURIComponent(src.key)}`;
+                    // 改走 Worker proxy（後端持 ap15 admin key），前端不持 Ragic key
+                    const url = `${WORKER_URL}/${src.workerAction}`;
                     const resp = await fetch(url);
                     if (!resp.ok) { console.warn(`${src.name} 載入失敗 ${resp.status}`); return; }
                     const data = await resp.json();
+                    if (data.error) { console.warn(`${src.name} Worker error:`, data.error); return; }
                     const entries = Object.entries(data);
                     for (const [id, item] of entries) {
                         if (src.filter && !src.filter(item)) continue;
