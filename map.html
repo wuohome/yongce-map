@@ -216,7 +216,7 @@
                             <input type="checkbox" checked> <span class="dot" style="background:#b99f6b;"></span> 永策
                         </label>
                         <label class="source-option" data-value="alliance">
-                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 窩的家開放物件
+                            <input type="checkbox" checked> <span class="dot" style="background:#3a506b;"></span> 優式聯盟
                         </label>
                     </div>
                 </div>
@@ -234,7 +234,8 @@
         <!-- 地圖圖例 -->
         <div class="map-legend">
             <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 窩的家開放物件</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 優式聯盟</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #2a9d6b;"></div> 享寓</div>
         </div>
     </div>
 
@@ -255,7 +256,7 @@
         // ap16 永策物件走 getYongceProperties（已改 2026-05-22）
         const WORKER_URL = "https://wuohome-ragic-proxy.wuohome.workers.dev";
 
-        // 窩的家開放物件（ap15 view21 + filterId=104）透過 Worker 後端持 key 過濾欄位
+        // 優式聯盟（ap15 view21 + filterId=104）透過 Worker 後端持 key 過濾欄位
         // ap15 子表格 _subtable_1000254：1000251=業務姓名、1000252=業務電話
         const AP15_SUB = "_subtable_1000254";
         const AP15_DEV_NAME = "1000251";
@@ -322,6 +323,20 @@
             scale: 1.3,
             anchor: null
         };
+        const MARKER_XIANGYU = {
+            path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
+            fillColor: "#2a9d6b",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+            scale: 1.3,
+            anchor: null
+        };
+        // ALLIANCE_COLOR_MAP: 依 _allianceCompany 指定獨立標記顏色；未來新友店只需在此加一筆
+        const ALLIANCE_COLOR_MAP = {
+            '享寓國際': MARKER_XIANGYU,
+            '享寓國際有限公司': MARKER_XIANGYU,
+        };
 
         let map;
         let markers = [];
@@ -366,6 +381,7 @@
             MARKER_OWN.anchor = new google.maps.Point(12, 21);
             MARKER_INTERNAL.anchor = new google.maps.Point(12, 21);
             MARKER_ALLIANCE.anchor = new google.maps.Point(12, 21);
+            MARKER_XIANGYU.anchor = new google.maps.Point(12, 21);
 
             map.addListener('idle', () => {
                 clearTimeout(mapMoveTimeout);
@@ -505,7 +521,7 @@
                 if (coord && coord.includes(',') && !isNaN(parseFloat(coord.split(',')[0]))) {
                     const [lat, lng] = coord.split(',').map(Number);
                     const isAlliance = item._isAlliance;
-                    const markerIcon = isAlliance ? MARKER_ALLIANCE : MARKER_OWN;
+                    const markerIcon = !isAlliance ? MARKER_OWN : (ALLIANCE_COLOR_MAP[item._allianceCompany] || MARKER_ALLIANCE);
                     const marker = new google.maps.Marker({
                         position: { lat, lng }, map: map,
                         title: (isAlliance ? `[${item._allianceCompany || '聯盟'}] ` : '') + item[EID.TITLE],
@@ -792,7 +808,7 @@
             { id: "1000027", label: "591連結", isLink: true },
         ];
 
-        // 窩的家開放物件：item 已經過 map() 轉換成 EID-keyed 形式
+        // 優式聯盟：item 已經過 map() 轉換成 EID-keyed 形式
         // 可顯示的欄位就是 showInfoWindow 已顯示的 + 公開物件資訊
         const WUOHOME_PUBLIC_FIELDS = [
             { id: EID.STATUS,  label: "狀態" },
