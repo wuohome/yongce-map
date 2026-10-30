@@ -9,17 +9,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { display: flex; height: 100vh; overflow: hidden; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f3f4f6; }
+        /* 品牌色：永策標記色 #b99f6b 在白底太淡，文字／按鈕用較深的同色系 */
+        :root { --brand: #8a7340; --brand-dark: #6f5c32; --brand-soft: #f6f1e6; --brand-line: #e4d9bd; }
+        body { display: flex; height: 100vh; height: 100dvh; overflow: hidden; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f3f4f6; }
         #sidebar { width: 380px; background: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 20; display: flex; flex-direction: column; transition: transform 0.3s ease; }
-        #map-container { flex: 1; position: relative; }
+        #map-container { flex: 1; position: relative; min-height: 0; }
         #map { height: 100%; width: 100%; }
+        button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+        .brand-logo { background: var(--brand); color: #fff; }
+        .brand-spinner { border-color: var(--brand); border-top-color: transparent; }
 
         .property-card { padding: 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: all 0.2s; background: #fff; position: relative; }
         .property-card:hover { background: #f9fafb; padding-left: 20px; }
-        .property-card.active { background: #eff6ff; border-left: 4px solid #2563eb; padding-left: 16px; }
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .card-title { font-weight: bold; font-size: 16px; color: #1f2937; line-height: 1.4; flex: 1; }
+        .property-card.active { background: var(--brand-soft); border-left: 4px solid var(--brand); padding-left: 16px; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+        .card-title { font-weight: bold; font-size: 16px; color: #1f2937; line-height: 1.4; flex: 1; word-break: break-word; }
+        .card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
         .card-details { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #4b5563; margin-bottom: 8px; flex-wrap: wrap; }
+        .card-addr { flex: 1 1 100%; white-space: normal; word-break: break-all; line-height: 1.5; }
         .tag { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
         .tag-shop { background: #fee2e2; color: #991b1b; }
         .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
@@ -28,6 +36,12 @@
         .btn-591 { display: inline-flex; align-items: center; gap: 4px; background-color: #ff8c00; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; transition: background 0.2s; }
         .btn-591:hover { background-color: #e07b00; }
         .btn-hidden { display: none; }
+        .btn-nav { display: inline-flex; align-items: center; gap: 4px; background: var(--brand); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; transition: background 0.2s; }
+        .btn-nav:hover { background: var(--brand-dark); }
+
+        /* 狀態標籤 */
+        .status-tag { display: inline-block; padding: 1px 8px; border-radius: 9999px; font-size: 11px; font-weight: bold; white-space: nowrap; color: #fff; background: #6b7280; }
+        .status-tag.status-deposit { background: #ea8a1a; }
 
         /* 聯絡人按鈕樣式 */
         .agent-btn {
@@ -44,46 +58,85 @@
 
         .filter-section { padding: 12px 16px; background: white; border-bottom: 1px solid #e5e7eb; }
         .search-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background-color: #f9fafb; outline: none; transition: border-color 0.2s; }
-        .search-input:focus { border-color: #2563eb; background-color: white; }
-        .filter-row { display: flex; gap: 8px; margin-top: 8px; }
-        .filter-select { flex: 1; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: white; outline: none; cursor: pointer; }
+        .search-input:focus { border-color: var(--brand); background-color: white; }
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .filter-select { width: 100%; min-width: 0; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: white; cursor: pointer; }
         .source-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; transition: background 0.1s; }
         .source-option:hover { background: #f3f4f6; }
-        .source-option input[type="checkbox"] { accent-color: #2563eb; }
+        .source-option input[type="checkbox"] { accent-color: var(--brand); }
         .source-option .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
         /* 數據統計儀表板 */
         .stats-dashboard {
-            display: flex; justify-content: space-between; background: #f0f9ff; padding: 10px 16px; border-bottom: 1px solid #bfdbfe; font-size: 12px; color: #1e3a8a;
+            display: flex; justify-content: space-between; background: var(--brand-soft); padding: 10px 16px; border-bottom: 1px solid var(--brand-line); font-size: 12px; color: var(--brand);
         }
         .stat-item b { font-size: 14px; margin-left: 4px; }
 
-        /* 聯盟他店標籤 */
+        /* 友店標籤 */
         .tag-alliance {
             display: inline-flex; align-items: center; gap: 3px;
-            background: #3a506b; color: white;
+            background: var(--source-color, #3a506b); color: white;
             padding: 2px 8px; border-radius: 9999px;
             font-size: 11px; font-weight: bold;
             white-space: nowrap;
         }
-        .property-card.alliance-card { border-left: 3px solid #3a506b; }
-        .property-card.alliance-card:hover { background: #f0f4f8; }
+        .property-card.alliance-card { border-left: 3px solid var(--source-color, #3a506b); }
+        .property-card.alliance-card:hover { background: var(--source-hover, #f0f4f8); }
 
         /* 地圖圖例 */
         .map-legend {
             position: absolute; bottom: 24px; right: 16px; z-index: 10;
             background: white; padding: 10px 14px; border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 12px;
-            display: flex; flex-direction: column; gap: 6px;
         }
+        .legend-items { display: flex; flex-direction: column; gap: 6px; }
+        .legend-toggle { display: none; }
         .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3); }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3); flex-shrink: 0; }
+
+        /* 列表模式浮動鈕 / 抽屜把手（僅手機） */
+        .list-fab { display: none; }
+        .drawer-handle { display: none; }
+
+        /* 警示 / 錯誤區塊 */
+        #warn-banner { display: none; position: absolute; top: 12px; left: 12px; right: 12px; z-index: 11; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; border-radius: 8px; padding: 8px 12px; font-size: 13px; align-items: center; gap: 8px; max-width: 520px; }
+        #warn-banner button { margin-left: auto; background: #fff; border: 1px solid #fcd34d; border-radius: 6px; padding: 2px 10px; font-size: 12px; cursor: pointer; color: #92400e; flex-shrink: 0; }
+        #error-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9000; background: #fff; border: 1px solid #fecaca; border-radius: 12px; padding: 24px; width: min(360px, 90vw); text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        .btn-primary { background: var(--brand); color: #fff; border: none; border-radius: 6px; padding: 6px 16px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .btn-primary:hover { background: var(--brand-dark); }
+
+        /* 資訊窗 */
+        .iw-row { border-top: 1px solid #eee; padding: 6px 0; }
+        .iw-row:first-child { border-top: none; }
+        .iw-row.focused { background: var(--brand-soft); margin: 0 -4px; padding: 6px 4px; border-radius: 4px; }
+        .iw-btn { background: var(--brand); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; min-height: 28px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { width: 100%; height: 0; overflow: hidden; order: 2; display: none; }
-            #map-container { height: 100%; order: 1; }
-            #sidebar.mobile-active { display: flex; height: 60vh; position: fixed; bottom: 0; left: 0; width: 100%; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+            /* 底部抽屜 */
+            #sidebar {
+                position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
+                height: 75vh; height: 75dvh; z-index: 30;
+                border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+                transform: translateY(100%); visibility: hidden;
+                transition: transform 0.3s ease, visibility 0s linear 0.3s;
+            }
+            #sidebar.mobile-active { transform: translateY(0); visibility: visible; transition: transform 0.3s ease, visibility 0s; }
+            .drawer-handle { display: flex; justify-content: center; align-items: center; width: 100%; padding: 10px 0 6px; background: #fff; border: none; border-radius: 16px 16px 0 0; cursor: pointer; flex-shrink: 0; }
+            .drawer-handle .bar { width: 44px; height: 5px; border-radius: 9999px; background: #cbd5e1; }
+            #map-container { height: 100%; }
+            /* 列表模式鈕 */
+            .list-fab { display: flex; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 25; background: #111827; color: #fff; padding: 12px 20px; border-radius: 9999px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-weight: bold; font-size: 14px; align-items: center; gap: 8px; border: none; cursor: pointer; }
+            body.drawer-open .list-fab { display: none; }
+            /* 圖例收成右上小按鈕 */
+            .map-legend { top: 12px; right: 12px; bottom: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+            .legend-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; background: #fff; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.25); color: var(--brand); font-size: 16px; cursor: pointer; }
+            .legend-items { display: none; background: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+            .map-legend.open .legend-items { display: flex; }
+            #warn-banner { right: 64px; }
+            /* 問題回報鈕：避開列表模式鈕與抽屜把手；抽屜打開時讓抽屜蓋住它 */
+            #wh-bug-report-btn { bottom: 88px !important; right: 12px !important; }
+            body.drawer-open #wh-bug-report-btn { z-index: 15 !important; }
         }
 
         /* 完整資料 modal */
@@ -127,61 +180,69 @@
         }
         #detail-modal .modal-badge {
             display: inline-flex; align-items: center; gap: 3px;
-            background: #3a506b; color: white;
+            background: var(--source-color, var(--brand)); color: white;
             padding: 2px 8px; border-radius: 9999px;
             font-size: 11px; font-weight: bold; margin-bottom: 12px;
         }
+        #detail-modal .modal-link { color: var(--brand-dark); word-break: break-all; }
         .btn-detail {
             display: inline-flex; align-items: center; gap: 4px;
-            background-color: #9B0C23; color: white;
+            background-color: var(--brand); color: white;
             padding: 4px 8px; border-radius: 4px;
             font-size: 12px; font-weight: bold;
             border: none; cursor: pointer; transition: background 0.2s;
             text-decoration: none;
         }
-        .btn-detail:hover { background-color: #7a0a1c; }
+        .btn-detail:hover { background-color: var(--brand-dark); }
     </style>
 </head>
 <body>
 
     <!-- 完整資料唯讀 modal -->
     <div id="detail-modal-overlay" onclick="closeDetailModal(event)">
-        <div id="detail-modal">
-            <button class="modal-close" onclick="closeDetailModal(null, true)" title="關閉">&#x2715;</button>
+        <div id="detail-modal" role="dialog" aria-modal="true" aria-label="物件完整資料">
+            <button type="button" class="modal-close" onclick="closeDetailModal(null, true)" title="關閉" aria-label="關閉">&#x2715;</button>
             <div id="detail-modal-content"></div>
         </div>
     </div>
 
     <div id="loading" class="loading-overlay">
-        <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-4 brand-spinner"></div>
         <p class="mt-4 text-gray-600 font-bold tracking-widest text-sm">載入中...</p>
     </div>
 
+    <div id="error-panel" role="alert">
+        <div style="font-size:28px; color:#dc2626;"><i class="fas fa-exclamation-triangle"></i></div>
+        <p id="error-text" class="my-3 text-gray-700 text-sm font-bold"></p>
+        <button type="button" class="btn-primary" onclick="fetchData()"><i class="fas fa-redo mr-1"></i> 重試</button>
+    </div>
+
     <div id="sidebar">
+        <button type="button" class="drawer-handle" onclick="toggleSidebar()" aria-label="收合列表"><span class="bar"></span></button>
         <!-- 標題區 -->
         <div class="px-4 py-3 border-b flex justify-between items-center bg-white">
             <div class="flex items-center gap-2">
-                <div style="background-color:#b99f6b;" class="text-white w-7 h-7 rounded flex items-center justify-center font-bold text-sm">策</div>
+                <div class="brand-logo w-7 h-7 rounded flex items-center justify-center font-bold text-sm">策</div>
                 <div>
                     <h2 class="text-base font-bold text-gray-800">物件列表</h2>
                     <div id="last-update-time" class="text-[10px] text-gray-400 font-normal">最後更新: --</div>
                 </div>
             </div>
-            <button onclick="fetchData()" class="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-gray-50 transition" title="重新整理">
+            <button type="button" onclick="fetchData()" class="text-gray-400 hover:text-[color:var(--brand)] p-2 rounded-full hover:bg-gray-50 transition" title="重新整理" aria-label="重新整理">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </div>
 
         <!-- 數據儀表板 -->
         <div class="stats-dashboard">
-            <div class="stat-item text-blue-700">
+            <div class="stat-item">
                 <i class="fas fa-map-marker-alt"></i> 此區域: <b id="visible-count">0</b> 筆
             </div>
-            <div class="stat-item" style="color: #b99f6b;">
+            <div class="stat-item">
                 <i class="fas fa-home"></i> 永策: <b id="own-count">0</b>
             </div>
             <div class="stat-item" style="color: #3a506b;">
-                <i class="fas fa-building"></i> 窩的家: <b id="alliance-count">0</b>
+                <i class="fas fa-handshake"></i> 友店: <b id="alliance-count">0</b>
             </div>
         </div>
 
@@ -189,29 +250,37 @@
         <div class="filter-section">
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" id="search-input" class="search-input pl-9" placeholder="搜尋案名、地址...">
+                <input type="text" id="search-input" class="search-input pl-9" placeholder="搜尋案名、地址..." aria-label="搜尋案名或地址">
             </div>
             <div class="filter-row">
-                <select id="filter-room" class="filter-select">
+                <select id="filter-room" class="filter-select" aria-label="格局篩選">
                     <option value="">格局不限</option>
                     <option value="1">1房</option>
                     <option value="2">2房</option>
                     <option value="3">3房</option>
                     <option value="4">4房以上</option>
                 </select>
-                <select id="filter-type" class="filter-select">
+                <select id="filter-type" class="filter-select" aria-label="用途篩選">
                     <option value="">用途不限</option>
                     <option value="住宅">住宅</option>
                     <option value="店面">店面/商業</option>
                     <option value="辦公">辦公室</option>
                     <option value="車位">車位</option>
                 </select>
-                <div class="source-dropdown-wrap" style="flex:1; position:relative;">
-                    <button id="source-dropdown-btn" class="filter-select" style="text-align:left; display:flex; justify-content:space-between; align-items:center;" onclick="toggleSourceDropdown()">
-                        <span id="source-dropdown-label">全部來源</span>
-                        <i class="fas fa-chevron-down" style="font-size:10px; color:#9ca3af;"></i>
+                <select id="filter-rent" class="filter-select" aria-label="租金篩選">
+                    <option value="">租金不限</option>
+                    <option value="lt1">1 萬以下</option>
+                    <option value="1-2">1～2 萬</option>
+                    <option value="2-4">2～4 萬</option>
+                    <option value="4-8">4～8 萬</option>
+                    <option value="gt8">8 萬以上</option>
+                </select>
+                <div class="source-dropdown-wrap" style="position:relative; min-width:0;">
+                    <button type="button" id="source-dropdown-btn" class="filter-select" style="text-align:left; display:flex; justify-content:space-between; align-items:center; gap:6px;" onclick="toggleSourceDropdown()" aria-haspopup="true" aria-expanded="false" aria-label="來源篩選">
+                        <span id="source-dropdown-label" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">全部來源</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px; color:#9ca3af; flex-shrink:0;"></i>
                     </button>
-                    <div id="source-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #d1d5db; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:100; margin-top:4px; overflow:hidden;">
+                    <div id="source-dropdown-menu" style="display:none; position:absolute; top:100%; right:0; min-width:170px; background:white; border:1px solid #d1d5db; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:100; margin-top:4px; overflow:hidden;">
                         <label class="source-option" data-value="own">
                             <input type="checkbox" checked> <span class="dot" style="background:#b99f6b;"></span> 永策
                         </label>
@@ -228,23 +297,35 @@
 
     <div id="map-container">
         <div id="map"></div>
-        <button onclick="toggleSidebar()" class="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-xl font-bold z-50 flex items-center gap-2 text-sm">
+        <div id="warn-banner" role="status">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="warn-text"></span>
+            <button type="button" onclick="fetchData()">重試</button>
+        </div>
+        <button type="button" id="list-fab" onclick="toggleSidebar()" class="list-fab" aria-label="開啟列表模式">
             <i class="fas fa-list-ul"></i> 列表模式
         </button>
         <!-- 地圖圖例 -->
-        <div class="map-legend">
-            <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 優式聯盟</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #2a9d6b;"></div> 享寓</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #c94f80;"></div> 心寓</div>
+        <div class="map-legend" id="map-legend">
+            <button type="button" class="legend-toggle" onclick="toggleLegend()" aria-label="顯示或隱藏圖例" aria-expanded="false"><i class="fas fa-layer-group"></i></button>
+            <div class="legend-items">
+                <div class="legend-item"><div class="legend-dot" style="background: #b99f6b;"></div> 永策</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #3a506b;"></div> 優式聯盟</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #2a9d6b;"></div> 享寓</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #c94f80;"></div> 心寓</div>
+            </div>
         </div>
     </div>
+
+    <!-- 標記群聚（載入失敗時退回不群聚，地圖仍可用） -->
+    <script src="https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"></script>
 
     <script>
         // 永策租賃物件欄位 ID（2026-05-08 撈自 ap16/YongCe/property-data-kept/1?def=true）
         const EID = {
             TITLE: "1000009", ADDR: "1000011", COORD: "1000036",
             PRICE: "1000030", LAYOUT: "1000047", USAGE: "1000035", LINK_591: "1000027",
+            OBJ_TYPE: "1000034",
             STATUS: "1000002",
             // 子表格（開發業務）— Worker 白名單已加回，只回姓名+電話不回 email
             SUB_DEV:  "_subtable_1000109",
@@ -266,7 +347,6 @@
         const ALLIANCE_SOURCES = [
             {
                 name: "窩的家",
-                color: "#3a506b",
                 // fetch URL 改走 Worker — 不再直連 Ragic，前端不持 key
                 workerAction: "getYongceAllianceProperties",
                 filter: null,
@@ -276,8 +356,8 @@
                     const agents = [];
                     if (subRaw && typeof subRaw === 'object') {
                         Object.values(subRaw).forEach(row => {
-                            const name = row[AP15_DEV_NAME] || '';
-                            const phone = row[AP15_DEV_PHONE] || '';
+                            const name = (row && row[AP15_DEV_NAME]) || '';
+                            const phone = (row && row[AP15_DEV_PHONE]) || '';
                             if (name && phone) agents.push({ name, phone });
                         });
                     }
@@ -296,19 +376,10 @@
             }
         ];
 
-        // 自訂地標 SVG
+        // 自訂地標 SVG（顏色由來源決定，見 getSourceMeta）
         const MARKER_OWN = {
             path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
             fillColor: "#b99f6b",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 1.5,
-            anchor: null
-        };
-        const MARKER_INTERNAL = {
-            path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
-            fillColor: "#7c8590",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 2,
@@ -324,49 +395,186 @@
             scale: 1.3,
             anchor: null
         };
-        const MARKER_XIANGYU = {
-            path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
-            fillColor: "#2a9d6b",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 1.3,
-            anchor: null
-        };
-        const MARKER_XINYU = {
-            path: "M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
-            fillColor: "#c94f80",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 1.3,
-            anchor: null
-        };
-        // ALLIANCE_COLOR_MAP: 依 _allianceCompany 指定獨立標記顏色；未來新友店只需在此加一筆
+        const SOURCE_GREEN = { color: '#2a9d6b', hover: '#eef8f3' };   // 享寓
+        const SOURCE_PINK  = { color: '#c94f80', hover: '#fdf0f5' };   // 心寓
+        const SOURCE_DEFAULT_ALLIANCE = { color: '#3a506b', hover: '#f0f4f8' };  // 窩的家等
+        // ALLIANCE_COLOR_MAP: 依 _allianceCompany 指定標記顏色；未來新友店只需在此加一筆
         const ALLIANCE_COLOR_MAP = {
-            '享寓國際': MARKER_XIANGYU,
-            '享寓國際有限公司': MARKER_XIANGYU,
-            '心寓Room8': MARKER_XINYU,  // 2026-06-24
+            '享寓國際': SOURCE_GREEN,
+            '享寓國際有限公司': SOURCE_GREEN,
+            '享寓': SOURCE_GREEN,
+            '心寓Room8': SOURCE_PINK,  // 2026-06-24
+            '心寓': SOURCE_PINK,
+            'Room8': SOURCE_PINK,
         };
+
+        // ========== 安全 / 格式工具 ==========
+        function escapeHtml(v) {
+            return String(v === null || v === undefined ? '' : v).replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
+
+        // 只接受 http / https，其餘一律視為無連結
+        function safeHttpUrl(u) {
+            const s = String(u || '').trim();
+            return /^https?:\/\//i.test(s) ? s : '';
+        }
+
+        // 電話只保留 數字 + -
+        function sanitizePhone(p) {
+            return String(p || '').replace(/[^\d+\-]/g, '');
+        }
+
+        function toNumber(v) {
+            const n = Number(String(v === null || v === undefined ? '' : v).replace(/[^\d.]/g, ''));
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function formatPrice(item) {
+            const n = toNumber(item[EID.PRICE]);
+            return n > 0 ? n.toLocaleString() : '面議';
+        }
+
+        // 格局顯示（只改顯示，原始值不動）
+        function formatLayout(raw) {
+            const s = String(raw === null || raw === undefined ? '' : raw).trim();
+            if (!s) return '';
+            if (s.includes('未填寫')) return '格局未填';
+            if (/^\d+$/.test(s)) return Number(s) > 0 ? `${s}房` : '格局未填';
+            if (/^(?:\d+[房廳衛廚陽])+$/.test(s)) {
+                const parts = s.match(/\d+[房廳衛廚陽]/g).filter(p => parseInt(p, 10) > 0);
+                return parts.length ? parts.join('') : '格局未填';
+            }
+            // 結尾孤立的「陽」（前面不是數字）去掉
+            return s.replace(/([^\d])陽$/, '$1');
+        }
+
+        // 房數（供篩選用）：N房、N+M個隔間 取 N；純數字取該數；其餘 0
+        function getRoomCount(layout) {
+            const s = String(layout || '').trim();
+            let m = s.match(/(\d+)\s*\+\s*\d+\s*個?隔間/);
+            if (m) return parseInt(m[1], 10);
+            m = s.match(/(\d+)\s*房/);
+            if (m) return parseInt(m[1], 10);
+            if (/^\d+$/.test(s)) return parseInt(s, 10);
+            return 0;
+        }
+
+        // 租金區間（"以下"含上限）：lt1 ≤1萬、1-2 (1萬,2萬]、2-4、4-8、gt8 >8萬
+        function matchesRent(item, rentFilter) {
+            if (!rentFilter) return true;
+            const p = toNumber(item[EID.PRICE]);
+            if (p <= 0) return false; // 面議不落在任何區間
+            switch (rentFilter) {
+                case 'lt1': return p <= 10000;
+                case '1-2': return p > 10000 && p <= 20000;
+                case '2-4': return p > 20000 && p <= 40000;
+                case '4-8': return p > 40000 && p <= 80000;
+                case 'gt8': return p > 80000;
+                default: return true;
+            }
+        }
+
+        // 用途判斷：用途 + 物件型態（永策自家有；友店沒有型態欄）；兩者皆空時才靠案名關鍵字
+        function matchesUsage(item, type) {
+            if (!type) return true;
+            const usage = String(item[EID.USAGE] || '');
+            const objType = String(item[EID.OBJ_TYPE] || '');
+            let text = (usage + ' ' + objType).trim();
+            if (!text) text = String(item[EID.TITLE] || '');
+
+            const isShop = text.includes('店');
+            const isOffice = text.includes('辦') || text.includes('商');
+            const isParking = text.includes('車位') || usage.includes('車');
+            const isIndustrial = text.includes('工業') || text.includes('廠房');
+            const isResidential = text.includes('住') || (!isShop && !isOffice && !isParking && !isIndustrial);
+
+            switch (type) {
+                case '店面': return isShop;
+                case '辦公': return isOffice;
+                case '車位': return isParking;
+                case '住宅': return isResidential;
+                default: return true;
+            }
+        }
+
+        function getLatLng(item) {
+            if (item._ll !== undefined) return item._ll;
+            let ll = null;
+            const coord = item[EID.COORD];
+            if (coord && String(coord).includes(',')) {
+                const [lat, lng] = String(coord).split(',').map(x => parseFloat(x));
+                if (Number.isFinite(lat) && Number.isFinite(lng)) ll = { lat, lng };
+            }
+            item._ll = ll;
+            return ll;
+        }
+
+        // ========== 狀態 / 來源 ==========
+        // 一般可帶看（空白、代租中、未出租）不顯示；其餘顯示，已收定用橘色且標記半透明
+        function getStatusInfo(item) {
+            const s = String(item[EID.STATUS] || '').trim();
+            if (!s || s === '代租中' || s === '未出租') return null;
+            if (s.includes('已收定')) return { label: '已收定', cls: 'status-deposit', deposit: true };
+            return { label: s, cls: '', deposit: false };
+        }
+
+        function statusTagHtml(item) {
+            const st = getStatusInfo(item);
+            return st ? `<span class="status-tag ${st.cls}">${escapeHtml(st.label)}</span>` : '';
+        }
+
+        function getSourceMeta(item) {
+            if (!item._isAlliance) {
+                return { type: 'own', label: '永策', color: '#b99f6b', hover: '#faf6ec', icon: 'fa-home' };
+            }
+            const company = String(item._allianceCompany || '').trim();
+            const c = ALLIANCE_COLOR_MAP[company] || SOURCE_DEFAULT_ALLIANCE;
+            return { type: 'alliance', label: company || '窩的家', color: c.color, hover: c.hover, icon: 'fa-building' };
+        }
+
+        // 來源徽章：友店顯示公司名；永策自家不顯示
+        function sourceBadgeHtml(source) {
+            if (source.type === 'own') return '';
+            return `<span class="tag-alliance" style="--source-color:${escapeHtml(source.color)}"><i class="fas ${escapeHtml(source.icon)}"></i> ${escapeHtml(source.label)}</span>`;
+        }
+
+        function markerIconWithColor(baseIcon, color) {
+            return { ...baseIcon, fillColor: color };
+        }
 
         let map;
         let markers = [];
+        let clusterer = null;
+        let markerById = new Map();     // item.id -> 該座標的 marker
+        let infoItems = new Map();      // item.id -> item（modal / 資訊窗取用）
+        let baseRecords = [];           // 載入時一次完成：排除下架 + 地址去重
         let fetchedRecords = [];
         let allianceRecords = [];
         let filteredRecords = [];
         let activeInfoWindow = null;
         let mapMoveTimeout;
+        let isLoading = false;
+        let lastFocusEl = null;
+        const warnState = { alliance: false, map: false };
 
         window.onload = () => {
             updateTimeDisplay();
             const script = document.createElement('script');
             script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&callback=initMap&libraries=geometry`;
             script.async = true;
+            // 地圖腳本載入失敗：列表仍要用，直接載入資料
+            script.onerror = () => {
+                warnState.map = true;
+                fetchData();
+            };
             document.head.appendChild(script);
 
             document.getElementById('search-input').addEventListener('input', () => applyFilters(true));
             document.getElementById('filter-room').addEventListener('change', () => applyFilters(true));
             document.getElementById('filter-type').addEventListener('change', () => applyFilters(true));
+            document.getElementById('filter-rent').addEventListener('change', () => applyFilters(true));
             document.querySelectorAll('.source-option input').forEach(cb => {
                 cb.addEventListener('change', () => {
                     updateSourceLabel();
@@ -376,9 +584,46 @@
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.source-dropdown-wrap')) {
                     document.getElementById('source-dropdown-menu').style.display = 'none';
+                    document.getElementById('source-dropdown-btn').setAttribute('aria-expanded', 'false');
                 }
             });
         };
+
+        // Google Maps 金鑰／授權失敗時會呼叫這個全域函式
+        window.gm_authFailure = () => {
+            warnState.map = true;
+            refreshWarn();
+        };
+
+        function createClusterer() {
+            try {
+                if (!(window.markerClusterer && window.markerClusterer.MarkerClusterer)) return null;
+                return new window.markerClusterer.MarkerClusterer({
+                    map,
+                    markers: [],
+                    // maxZoom=14：zoom 15 以上不群聚
+                    algorithm: new window.markerClusterer.SuperClusterAlgorithm({ maxZoom: 14, radius: 60 }),
+                    renderer: {
+                        render: ({ count, position }) => new google.maps.Marker({
+                            position,
+                            label: { text: String(count), color: '#ffffff', fontSize: '13px', fontWeight: 'bold' },
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                fillColor: '#8a7340',
+                                fillOpacity: 0.92,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2,
+                                scale: Math.min(26, 13 + String(count).length * 4)
+                            },
+                            zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count
+                        })
+                    }
+                });
+            } catch (e) {
+                console.warn('標記群聚初始化失敗，退回不群聚', e);
+                return null;
+            }
+        }
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
@@ -390,10 +635,9 @@
             });
             // 設定 anchor（需要 google.maps.Point）
             MARKER_OWN.anchor = new google.maps.Point(12, 21);
-            MARKER_INTERNAL.anchor = new google.maps.Point(12, 21);
             MARKER_ALLIANCE.anchor = new google.maps.Point(12, 21);
-            MARKER_XIANGYU.anchor = new google.maps.Point(12, 21);
-            MARKER_XINYU.anchor = new google.maps.Point(12, 21);
+
+            clusterer = createClusterer();
 
             map.addListener('idle', () => {
                 clearTimeout(mapMoveTimeout);
@@ -402,23 +646,43 @@
             fetchData();
         }
 
-        // ========== 聯盟他店資料載入（多源：窩的家 + 享寓非永策）==========
+        // ========== 錯誤 / 警示顯示 ==========
+        function showError(msg) {
+            document.getElementById('error-text').textContent = msg;
+            document.getElementById('error-panel').style.display = 'block';
+        }
+        function hideError() {
+            document.getElementById('error-panel').style.display = 'none';
+        }
+        function refreshWarn() {
+            const msgs = [];
+            if (warnState.alliance) msgs.push('友店資料沒載入，目前只顯示永策');
+            if (warnState.map) msgs.push('地圖沒載入成功，列表仍可使用');
+            const banner = document.getElementById('warn-banner');
+            if (!msgs.length) { banner.style.display = 'none'; return; }
+            document.getElementById('warn-text').textContent = msgs.join('；');
+            banner.style.display = 'flex';
+        }
+
+        // ========== 聯盟他店資料載入（走 Worker proxy → 窩的家開放聯盟）==========
+        // 回傳 true = 全部來源成功；false = 有來源失敗（失敗來源不留舊資料）
         async function fetchAllianceData() {
             const all = [];
+            let ok = true;
             await Promise.all(ALLIANCE_SOURCES.map(async (src) => {
                 try {
                     // 改走 Worker proxy（後端持 ap15 admin key），前端不持 Ragic key
-                    const url = `${WORKER_URL}/${src.workerAction}`;
-                    const resp = await fetch(url);
-                    if (!resp.ok) { console.warn(`${src.name} 載入失敗 ${resp.status}`); return; }
+                    const resp = await fetch(`${WORKER_URL}/${src.workerAction}`);
+                    if (!resp.ok) { console.warn(`${src.name} 載入失敗 ${resp.status}`); ok = false; return; }
                     const data = await resp.json();
-                    if (data.error) { console.warn(`${src.name} Worker error:`, data.error); return; }
-                    const entries = Object.entries(data);
+                    if (data.error) { console.warn(`${src.name} Worker error:`, data.error); ok = false; return; }
+                    const entries = Object.entries(data).filter(([id]) => !id.startsWith('_'));
                     for (const [id, item] of entries) {
                         if (src.filter && !src.filter(item)) continue;
                         const m = src.map(item);
                         all.push({
                             id: `${src.name}-${id}`,
+                            _ragicId: id,
                             _isAlliance: true,
                             _allianceCompany: m.company,
                             _allianceAgents: m.agents || [],  // [{name, phone}, ...]
@@ -428,29 +692,64 @@
                             [EID.PRICE]: m.price,
                             [EID.LAYOUT]: m.layout,
                             [EID.USAGE]: m.usage,
+                            [EID.OBJ_TYPE]: '',
                             [EID.STATUS]: '',
                             [EID.LINK_591]: m.link591
                         });
                     }
-                    console.log(`${src.name} 載入完成: ${entries.length} 筆 (filtered: ${all.filter(x => x.id.startsWith(src.name)).length})`);
+                    console.log(`${src.name} 載入完成: ${entries.length} 筆`);
                 } catch (e) {
                     console.warn(`${src.name} 載入錯誤:`, e);
+                    ok = false;
                 }
             }));
             allianceRecords = all;
             console.log(`聯盟他店 total: ${allianceRecords.length} 筆`);
+            return ok;
+        }
+
+        // 載入時做一次：先排除自家「下架」，再依地址去重（永策自家排前面，先遇到先保留）
+        function buildBaseRecords() {
+            const _normalizeAddr = (addr) => {
+                if (!addr) return '';
+                return String(addr)
+                    .replace(/[\s　 ]/g, '')
+                    .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                    .replace(/（/g, '(').replace(/）/g, ')')
+                    .replace(/，/g, ',').replace(/。/g, '.')
+                    .toLowerCase();
+            };
+            const live = [
+                ...fetchedRecords.filter(item => item[EID.STATUS] !== '下架'),
+                ...allianceRecords
+            ];
+            const seen = new Set();
+            baseRecords = live.filter(item => {
+                const key = _normalizeAddr(item[EID.ADDR]);
+                if (!key) return true;        // 空地址不參與去重
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            console.log('[dedup] before', live.length, 'after', baseRecords.length);
+            infoItems = new Map(baseRecords.map(item => [item.id, item]));
         }
 
         async function fetchData() {
+            if (isLoading) return;
+            isLoading = true;
             const loading = document.getElementById('loading');
             loading.style.display = 'flex';
+            hideError();
+            warnState.alliance = false;
+            refreshWarn();
 
             try {
                 // 永策自家物件改走 Cloudflare Worker proxy — 後端過濾敏感欄位，前端不持有 API key
                 const fetchUrl = `${WORKER_URL}/getYongceProperties`;
 
                 // 同時抓自家 + 聯盟資料
-                const [resp] = await Promise.all([
+                const [resp, allianceOk] = await Promise.all([
                     fetch(fetchUrl),
                     fetchAllianceData()
                 ]);
@@ -458,140 +757,191 @@
                 if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
 
                 const data = await resp.json();
-                fetchedRecords = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                fetchedRecords = Object.entries(data)
+                    .filter(([id]) => !id.startsWith('_'))
+                    .map(([id, val]) => ({ id, ...val }));
 
-                // 更新計數
-                document.getElementById('own-count').innerText = fetchedRecords.length;
-                document.getElementById('alliance-count').innerText = allianceRecords.length;
+                buildBaseRecords();
+                warnState.alliance = !allianceOk;
+                refreshWarn();
 
                 saveCurrentTime();
                 applyFilters(true);
-
-                setTimeout(() => loading.style.display = 'none', 500);
-
             } catch (err) {
                 console.error(err);
-                alert("讀取失敗，請確認網路或權限");
-                loading.style.display = 'none';
+                showError('讀取失敗，請確認網路後重試');
+            } finally {
+                isLoading = false;
+                setTimeout(() => { loading.style.display = 'none'; }, 300);
             }
         }
 
+        function hasActiveFilter() {
+            const total = document.querySelectorAll('.source-option').length;
+            const allSources = document.querySelectorAll('.source-option input:checked').length === total;
+            return !!(document.getElementById('search-input').value.trim()
+                || document.getElementById('filter-room').value
+                || document.getElementById('filter-type').value
+                || document.getElementById('filter-rent').value
+                || !allSources);
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-room').value = '';
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-rent').value = '';
+            document.querySelectorAll('.source-option input').forEach(cb => { cb.checked = true; });
+            updateSourceLabel();
+            applyFilters(true);
+        }
+
         function applyFilters(autoZoom = false) {
-            const keyword = document.getElementById('search-input').value.toLowerCase();
+            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
             const roomFilter = document.getElementById('filter-room').value;
             const typeFilter = document.getElementById('filter-type').value;
+            const rentFilter = document.getElementById('filter-rent').value;
             const activeSources = [...document.querySelectorAll('.source-option input:checked')].map(cb => cb.closest('.source-option').dataset.value);
 
-            // 合併自家 + 聯盟
-            let allRecords = [...fetchedRecords, ...allianceRecords];
+            filteredRecords = baseRecords.filter(item => {
+                // 來源篩選（永策 / 友店）
+                if (!activeSources.includes(getSourceMeta(item).type)) return false;
 
-            filteredRecords = allRecords.filter(item => {
-                // 來源篩選：永策（own）/ 聯盟他店（alliance），不分內部層級
-                const isAlliance = item._isAlliance;
-                if (isAlliance && !activeSources.includes('alliance')) return false;
-                if (!isAlliance && !activeSources.includes('own')) return false;
-
-                // 永策物件: 狀態為「下架」則不顯示
-                if (!item._isAlliance && item[EID.STATUS] === '下架') return false;
-
-                const title = (item[EID.TITLE] || '').toLowerCase();
-                const addr = (item[EID.ADDR] || '').toLowerCase();
+                const title = String(item[EID.TITLE] || '').toLowerCase();
+                const addr = String(item[EID.ADDR] || '').toLowerCase();
                 if (keyword && !title.includes(keyword) && !addr.includes(keyword)) return false;
 
                 if (roomFilter) {
-                    const layout = item[EID.LAYOUT] || '';
-                    const roomMatch = layout.match(/(\d+)房/);
-                    const roomNum = roomMatch ? parseInt(roomMatch[1]) : 0;
+                    const roomNum = getRoomCount(item[EID.LAYOUT]);
                     if (roomFilter === '4' && roomNum < 4) return false;
-                    if (roomFilter !== '4' && roomNum !== parseInt(roomFilter)) return false;
+                    if (roomFilter !== '4' && roomNum !== parseInt(roomFilter, 10)) return false;
                 }
 
-                if (typeFilter && !item._isAlliance) {
-                    const usage = (item[EID.USAGE] || '').toLowerCase();
-                    const layout = (item[EID.LAYOUT] || '').toLowerCase();
-                    if (typeFilter === '店面' && !usage.includes('店') && !layout.includes('店')) return false;
-                    if (typeFilter === '住宅' && (usage.includes('店') || usage.includes('辦') || usage.includes('商'))) return false;
-                    if (typeFilter === '辦公' && !usage.includes('辦') && !usage.includes('商')) return false;
-                    if (typeFilter === '車位' && !usage.includes('車')) return false;
-                }
+                if (!matchesUsage(item, typeFilter)) return false;
+                if (!matchesRent(item, rentFilter)) return false;
                 return true;
             });
 
+            // 計數：去重後、套用全部篩選後
+            const allianceN = filteredRecords.filter(i => i._isAlliance).length;
+            document.getElementById('own-count').innerText = filteredRecords.length - allianceN;
+            document.getElementById('alliance-count').innerText = allianceN;
+
             renderMarkers(autoZoom);
-            if (!autoZoom) renderListByMapBounds();
+            // 不論地圖有沒有載入、有沒有 fitBounds 都先刷新列表；fitBounds 完成後 idle 事件會再重畫一次
+            renderListByMapBounds();
+        }
+
+        // 排除離群點：以中位數為中心，約 ±0.2 度內視為主要區域（雙北）
+        function mainAreaPoints(pts) {
+            if (pts.length < 3) return pts;
+            const med = (arr) => { const s = [...arr].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+            const mLat = med(pts.map(p => p.lat));
+            const mLng = med(pts.map(p => p.lng));
+            const kept = pts.filter(p => Math.abs(p.lat - mLat) <= 0.2 && Math.abs(p.lng - mLng) <= 0.2);
+            return kept.length ? kept : pts;
+        }
+
+        function clearMarkers() {
+            if (clusterer) { try { clusterer.clearMarkers(); } catch (e) { console.warn(e); } }
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            markerById = new Map();
+            if (activeInfoWindow) { activeInfoWindow.close(); activeInfoWindow = null; }
         }
 
         function renderMarkers(autoZoom) {
-            markers.forEach(m => m.setMap(null));
-            markers = [];
+            if (!map) return;
+            clearMarkers();
 
-            let bounds = new google.maps.LatLngBounds();
-            let hasCoords = false;
-
+            // 依座標分組：同座標只放一個標記，點擊時列出該座標全部物件
+            const groups = new Map();
             filteredRecords.forEach(item => {
-                const coord = item[EID.COORD];
-                if (coord && coord.includes(',') && !isNaN(parseFloat(coord.split(',')[0]))) {
-                    const [lat, lng] = coord.split(',').map(Number);
-                    const isAlliance = item._isAlliance;
-                    const markerIcon = !isAlliance ? MARKER_OWN : (ALLIANCE_COLOR_MAP[item._allianceCompany] || MARKER_ALLIANCE);
-                    const marker = new google.maps.Marker({
-                        position: { lat, lng }, map: map,
-                        title: (isAlliance ? `[${item._allianceCompany || '聯盟'}] ` : '') + item[EID.TITLE],
-                        icon: markerIcon
-                    });
-                    marker.recordId = item.id;
-                    marker.addListener("click", () => {
-                        showInfoWindow(marker, item);
-                        scrollToCard(item.id);
-                    });
-                    markers.push(marker);
-                    bounds.extend({ lat, lng });
-                    hasCoords = true;
-                }
+                const ll = getLatLng(item);
+                if (!ll) return;
+                const key = `${ll.lat},${ll.lng}`;
+                if (!groups.has(key)) groups.set(key, { ll, items: [] });
+                groups.get(key).items.push(item);
             });
 
-            if (hasCoords && (autoZoom || !map.getBounds())) {
+            const points = [];
+            groups.forEach(({ ll, items }) => {
+                const first = items[0];
+                const source = getSourceMeta(first);
+                const markerBase = source.type === 'alliance' ? MARKER_ALLIANCE : MARKER_OWN;
+                const allDeposit = items.every(i => { const st = getStatusInfo(i); return st && st.deposit; });
+                const marker = new google.maps.Marker({
+                    position: ll,
+                    title: items.length > 1
+                        ? `此位置 ${items.length} 筆物件`
+                        : (source.type === 'alliance' ? `[${source.label}] ` : '') + (first[EID.TITLE] || ''),
+                    icon: markerIconWithColor(markerBase, source.color),
+                    opacity: allDeposit ? 0.55 : 1
+                });
+                marker._items = items;
+                marker._ll = ll;
+                marker.addListener("click", () => {
+                    showInfoWindow(ll, items);
+                    scrollToCard(first.id);
+                });
+                items.forEach(i => markerById.set(i.id, marker));
+                markers.push(marker);
+                points.push(ll);
+            });
+
+            if (clusterer) {
+                clusterer.addMarkers(markers);
+            } else {
+                markers.forEach(m => m.setMap(map));
+            }
+
+            if (points.length && (autoZoom || !map.getBounds())) {
+                const fitPts = (!hasActiveFilter()) ? mainAreaPoints(points) : points;
+                const bounds = new google.maps.LatLngBounds();
+                fitPts.forEach(p => bounds.extend(p));
                 map.fitBounds(bounds);
-                if (markers.length === 1) {
-                    const listener = google.maps.event.addListener(map, "idle", () => {
-                        if (map.getZoom() > 16) map.setZoom(16);
-                        google.maps.event.removeListener(listener);
-                    });
-                }
+                // 範圍很小（單點或同棟）時不要拉太近
+                const listener = google.maps.event.addListener(map, "idle", () => {
+                    if (map.getZoom() > 16) map.setZoom(16);
+                    google.maps.event.removeListener(listener);
+                });
             }
         }
 
         function renderListByMapBounds() {
             const list = document.getElementById('property-list');
-            const bounds = map.getBounds();
-            const center = map.getCenter();
 
-            if (!bounds) return;
+            // 篩選後完全沒有結果：不論地圖狀態都要更新列表與計數
+            if (filteredRecords.length === 0) {
+                document.getElementById('visible-count').innerHTML = '0';
+                list.innerHTML = `<div class="p-8 text-center text-gray-500">
+                    <div class="mb-3"><i class="fas fa-search text-2xl text-gray-300"></i></div>
+                    <div class="font-bold mb-3">沒有符合條件的物件</div>
+                    <button type="button" class="btn-primary" onclick="clearFilters()">清除篩選</button>
+                </div>`;
+                return;
+            }
+
+            // 地圖沒載入成功時仍列出全部物件，列表不跟著失效
+            const bounds = map ? map.getBounds() : null;
+            const center = map ? map.getCenter() : null;
 
             let visibleItems = filteredRecords.filter(item => {
-                const coord = item[EID.COORD];
-                if (!coord || !coord.includes(',')) return false;
-                const [lat, lng] = coord.split(',').map(Number);
-                return bounds.contains({ lat, lng });
+                const ll = getLatLng(item);
+                return ll && (!bounds || bounds.contains(ll));
             });
 
-            let noCoordItems = filteredRecords.filter(item => {
-                const coord = item[EID.COORD];
-                return !coord || !coord.includes(',') || isNaN(parseFloat(coord.split(',')[0]));
-            });
+            let noCoordItems = filteredRecords.filter(item => !getLatLng(item));
 
             // 距離排序
-            visibleItems.sort((a, b) => {
-                const [latA, lngA] = a[EID.COORD].split(',').map(Number);
-                const [latB, lngB] = b[EID.COORD].split(',').map(Number);
-                const distA = google.maps.geometry.spherical.computeDistanceBetween(center, new google.maps.LatLng(latA, lngA));
-                const distB = google.maps.geometry.spherical.computeDistanceBetween(center, new google.maps.LatLng(latB, lngB));
-                return distA - distB;
-            });
+            const dist = (item) => {
+                if (!center) return 0;
+                const ll = getLatLng(item);
+                return google.maps.geometry.spherical.computeDistanceBetween(center, new google.maps.LatLng(ll.lat, ll.lng));
+            };
+            visibleItems = visibleItems.map(i => [i, dist(i)]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
 
             // 更新計數
-            const ownVisible = visibleItems.filter(i => !i._isAlliance).length;
-            const allianceVisible = visibleItems.filter(i => i._isAlliance).length;
             let countHtml = `${visibleItems.length}`;
             if (noCoordItems.length > 0) {
                 countHtml += ` <span class="text-red-500 font-bold ml-1 text-xs" title="地址有錯誤抓不到地圖座標">(+${noCoordItems.length} 缺座標)</span>`;
@@ -619,127 +969,142 @@
         }
 
         function getAgentsHtml(item) {
-            // 窩的家（聯盟）物件：從 _allianceAgents 陣列渲染，綠色按鈕
+            const btn = (name, phone) => {
+                const tel = sanitizePhone(phone);
+                if (!name) return '';
+                const text = String(name).includes('@') ? '聯絡業務' : name;
+                // 永策業務電話目前多半未填：有姓名就顯示，沒電話時不做撥號連結
+                if (!tel) return `<span class="agent-btn" style="background-color:#6b7280;"><i class="fas fa-user"></i> ${escapeHtml(text)}</span>`;
+                return `<a href="tel:${escapeHtml(tel)}" class="agent-btn" onclick="event.stopPropagation()"><i class="fas fa-phone-alt"></i> ${escapeHtml(text)}</a>`;
+            };
+            // 友店物件：從 _allianceAgents 陣列渲染
             if (item._isAlliance) {
-                const agents = item._allianceAgents || [];
-                if (agents.length === 0) return '';
-                let html = '<div class="flex flex-wrap mt-2">';
-                agents.forEach(({ name, phone }) => {
-                    html += `<a href="tel:${phone}" class="agent-btn" onclick="event.stopPropagation()"><i class="fas fa-phone-alt"></i> ${name}</a>`;
-                });
-                html += '</div>';
-                return html;
+                const inner = (item._allianceAgents || []).map(a => btn(a.name, a.phone)).join('');
+                return inner ? `<div class="flex flex-wrap mt-2">${inner}</div>` : '';
             }
-            // 永策自家物件的聯絡人（子表格，保留原邏輯）
+            // 永策自家物件的聯絡人（子表格）
             const subData = item[EID.SUB_DEV];
-            if (!subData) return '';
-            const rows = Object.values(subData);
-            let html = '<div class="flex flex-wrap mt-2">';
-            let hasAgent = false;
-            rows.forEach(row => {
-                const name = row[EID.DEV_NAME];
-                const phone = row[EID.DEV_PHONE];
-                if (name && phone) {
-                    hasAgent = true;
-                    html += `<a href="tel:${phone}" class="agent-btn" onclick="event.stopPropagation()"><i class="fas fa-phone-alt"></i> ${name}</a>`;
-                }
+            if (!subData || typeof subData !== 'object') return '';
+            let inner = '';
+            Object.values(subData).forEach(row => {
+                if (row && typeof row === 'object') inner += btn(row[EID.DEV_NAME], row[EID.DEV_PHONE]);
             });
-            html += '</div>';
-            return hasAgent ? html : '';
+            return inner ? `<div class="flex flex-wrap mt-2">${inner}</div>` : '';
         }
 
         function createListItem(item, container, isNoCoord = false) {
-            // 存 reference 供 modal 使用（避免 inline JSON 注入風險）
-            window['__infoItem_' + item.id] = item;
+            infoItems.set(item.id, item);
+
             const div = document.createElement('div');
-            const price = item[EID.PRICE] ? parseInt(item[EID.PRICE]).toLocaleString() : "面議";
-            const isAlliance = item._isAlliance;
-            const link591 = item[EID.LINK_591];
-            const hasLink = link591 && link591.startsWith('http');
+            const price = formatPrice(item);
+            const source = getSourceMeta(item);
+            const isAlliance = source.type === 'alliance';
+            const link591 = safeHttpUrl(item[EID.LINK_591]);
             const usage = item[EID.USAGE] || '';
-            const isShop = usage.includes('店');
+            const isShop = String(usage).includes('店');
             const agentsHtml = getAgentsHtml(item);
-            const hasCoord = item[EID.COORD] && item[EID.COORD].includes(',') && !isNoCoord;
+            const ll = getLatLng(item);
+            const hasCoord = !!ll && !isNoCoord;
+            const title = String(item[EID.TITLE] || '(未命名)');
+            const addr = String(item[EID.ADDR] || '');
+            const showAddr = addr && addr.trim() !== title.trim();
 
             div.className = `property-card ${isNoCoord ? 'bg-red-50/30' : ''} ${isAlliance ? 'alliance-card' : ''}`;
+            div.style.setProperty('--source-color', source.color);
+            div.style.setProperty('--source-hover', source.hover);
             div.id = `card-${item.id}`;
             div.onclick = (e) => {
-                if(e.target.tagName === 'A' || e.target.closest('a')) return;
-                focusOnMap(item.id, item[EID.COORD]);
+                if (e.target.tagName === 'A' || e.target.closest('a') || e.target.closest('button')) return;
+                focusOnMap(item.id);
             };
 
-            const allianceBadge = isAlliance
-                ? `<span class="tag-alliance"><i class="fas fa-handshake"></i> ${item._allianceCompany || '聯盟他店'}</span>`
-                : '';
-
-            const sizeInfo = '';
+            const layoutText = formatLayout(item[EID.LAYOUT]) || usage || '未分類';
 
             div.innerHTML = `
                 <div class="card-header">
-                    <div class="card-title">${item[EID.TITLE] || '(未命名)'}</div>
-                    ${allianceBadge}
+                    <div class="card-title">${escapeHtml(title)}</div>
+                    <div class="card-badges">${statusTagHtml(item)}${sourceBadgeHtml(source)}</div>
                 </div>
                 <div class="card-details">
-                    <span class="tag ${isShop ? 'tag-shop' : ''}"><i class="fas ${isShop ? 'fa-store' : 'fa-home'} mr-1"></i>${item[EID.LAYOUT] || usage || '未分類'}${sizeInfo}</span>
-                    <span class="text-gray-400">|</span>
-                    <span class="truncate w-32 md:w-40" title="${item[EID.ADDR]}">${item[EID.ADDR] || ''}</span>
+                    <span class="tag ${isShop ? 'tag-shop' : ''}"><i class="fas ${isShop ? 'fa-store' : 'fa-home'} mr-1"></i>${escapeHtml(layoutText)}</span>
+                    ${showAddr ? `<span class="card-addr">${escapeHtml(addr)}</span>` : ''}
                 </div>
                 ${agentsHtml}
                 <div class="card-footer">
-                    <div class="card-price">$${price} <span class="price-unit">/月</span></div>
-                    <div class="flex gap-2 flex-wrap justify-end">
-                        ${hasCoord ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${item[EID.COORD]}" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 text-white py-1 px-2.5 rounded text-xs font-bold transition hover:bg-blue-700" onclick="event.stopPropagation()" title="導航"><i class="fas fa-location-arrow"></i> 導航</a>` : ''}
-                        ${hasLink ? `<a href="${link591}" target="_blank" class="btn-591" title="前往 591" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
-                        <button class="btn-detail" onclick="event.stopPropagation(); openDetailModal(window['__infoItem_${item.id}'])"><i class="fas fa-file-alt"></i> 完整資料</button>
+                    <div class="card-price">$${escapeHtml(price)} <span class="price-unit">/月</span></div>
+                    <div class="flex gap-2" style="flex-wrap:wrap; justify-content:flex-end;">
+                        <button type="button" class="btn-detail" data-id="${escapeHtml(item.id)}" onclick="event.stopPropagation(); openDetailModal(this.dataset.id)"><i class="fas fa-file-alt"></i> 完整資料</button>
+                        ${hasCoord ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${ll.lat},${ll.lng}" target="_blank" rel="noopener" class="btn-nav" onclick="event.stopPropagation()" title="導航" aria-label="導航到此物件"><i class="fas fa-location-arrow"></i> 導航</a>` : ''}
+                        ${link591 ? `<a href="${escapeHtml(link591)}" target="_blank" rel="noopener" class="btn-591" title="前往 591" aria-label="前往 591" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> 591</a>` : ''}
                     </div>
                 </div>`;
             container.appendChild(div);
         }
 
-        function showInfoWindow(marker, item) {
-            const price = item[EID.PRICE] ? parseInt(item[EID.PRICE]).toLocaleString() : "面議";
-            const isAlliance = item._isAlliance;
-            const link591 = item[EID.LINK_591];
-            const hasLink = link591 && link591.startsWith('http');
-            const [lat, lng] = item[EID.COORD].split(',');
+        // 資訊窗：單筆維持原樣式；同座標多筆則列出全部
+        function infoRowHtml(item, focusId) {
+            const price = formatPrice(item);
+            const source = getSourceMeta(item);
+            const link591 = safeHttpUrl(item[EID.LINK_591]);
+            const layoutText = formatLayout(item[EID.LAYOUT]);
+            const addr = String(item[EID.ADDR] || '');
+            const title = String(item[EID.TITLE] || '(未命名)');
             const agentsHtml = getAgentsHtml(item);
-
-            const allianceBanner = isAlliance
-                ? `<div style="background:#3a506b; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:8px; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-building"></i> ${item._allianceCompany || '窩的家'}</div>`
-                : '';
-
-            const itemJson = JSON.stringify(item).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            const infoContent = `
-                <div style="padding: 5px; min-width: 200px;">
-                    ${allianceBanner}
-                    <h3 class="font-bold text-base mb-1 text-gray-800">${item[EID.TITLE]}</h3>
-                    <p class="text-gray-500 text-xs mb-2">${item[EID.LAYOUT]} | ${item[EID.ADDR]}</p>
+            const ll = getLatLng(item);
+            return `
+                <div class="iw-row ${focusId === item.id ? 'focused' : ''}">
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:2px;">
+                        <h3 class="font-bold text-base text-gray-800" style="margin:0;">${escapeHtml(title)}</h3>
+                        ${statusTagHtml(item)}${sourceBadgeHtml(source)}
+                    </div>
+                    <p class="text-gray-500 text-xs mb-1">${escapeHtml(layoutText)}${(layoutText && addr && addr !== title) ? ' | ' : ''}${escapeHtml(addr !== title ? addr : '')}</p>
                     ${agentsHtml}
-                    <div class="flex justify-between items-center mt-2 border-t pt-2">
-                        <span class="text-red-600 font-bold text-lg">$${price}</span>
-                        <div class="flex gap-2 flex-wrap justify-end">
-                            ${hasLink ? `<a href="${link591}" target="_blank" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600" style="text-decoration:none;">591</a>` : ''}
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700" style="text-decoration:none;">導航</a>
-                            <button onclick="openDetailModal(window['__infoItem_${item.id}'])" class="text-xs px-2 py-1 rounded text-white font-bold" style="background:#9B0C23; border:none; cursor:pointer;">完整資料</button>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-red-600 font-bold text-lg">$${escapeHtml(price)}</span>
+                        <div class="flex gap-2" style="flex-wrap:wrap; justify-content:flex-end;">
+                            <button type="button" class="iw-btn" data-id="${escapeHtml(item.id)}" onclick="openDetailModal(this.dataset.id)" aria-label="開啟完整資料">完整資料</button>
+                            ${link591 ? `<a href="${escapeHtml(link591)}" target="_blank" rel="noopener" class="btn-591" style="text-decoration:none;" aria-label="前往 591">591</a>` : ''}
+                            ${ll ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${ll.lat},${ll.lng}" target="_blank" rel="noopener" class="btn-nav" style="text-decoration:none;" aria-label="導航到此物件">導航</a>` : ''}
                         </div>
                     </div>
                 </div>`;
-            window['__infoItem_' + item.id] = item;
+        }
+
+        function showInfoWindow(position, items, focusId) {
+            if (!map) return;
+            items.forEach(i => infoItems.set(i.id, i));
+            let body;
+            if (items.length === 1) {
+                body = infoRowHtml(items[0], null);
+            } else {
+                body = `<div class="text-xs font-bold mb-1" style="color:var(--brand);"><i class="fas fa-layer-group mr-1"></i>此位置共 ${items.length} 筆物件</div>
+                    <div style="max-height:260px; overflow-y:auto;">${items.map(i => infoRowHtml(i, focusId)).join('')}</div>`;
+            }
+            const infoContent = `<div style="padding: 5px; min-width: 220px; max-width: 300px;">${body}</div>`;
 
             if (activeInfoWindow) activeInfoWindow.close();
-            const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-            infoWindow.open(map, marker);
+            // 以座標定位（不依賴標記是否已顯示，被群聚收掉的標記也能開）
+            const infoWindow = new google.maps.InfoWindow({
+                content: infoContent,
+                position,
+                pixelOffset: new google.maps.Size(0, -32)
+            });
+            infoWindow.open({ map });
             activeInfoWindow = infoWindow;
         }
 
-        function focusOnMap(id, coord) {
-            if (!coord || !coord.includes(',')) { alert("尚無座標 (需同步)"); return; }
-            const [lat, lng] = coord.split(',').map(Number);
-            map.setCenter({ lat, lng });
+        function focusOnMap(id) {
+            const item = infoItems.get(id);
+            const ll = item ? getLatLng(item) : null;
+            if (!ll) { alert("尚無座標 (需同步)"); return; }
+            if (!map) return;   // 地圖沒載入：列表仍可看，只是無法定位
+            map.setCenter(ll);
             map.setZoom(16);
-            const targetMarker = markers.find(m => m.recordId === id);
-            if (targetMarker) google.maps.event.trigger(targetMarker, 'click');
-            if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('mobile-active');
+            const marker = markerById.get(id);
+            const items = marker ? marker._items : [item];
+            showInfoWindow(ll, items, id);
+            scrollToCard(id);
+            closeDrawer();
         }
 
         function scrollToCard(id) {
@@ -750,21 +1115,33 @@
 
         function toggleSourceDropdown() {
             const menu = document.getElementById('source-dropdown-menu');
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            const open = menu.style.display === 'none';
+            menu.style.display = open ? 'block' : 'none';
+            document.getElementById('source-dropdown-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
         }
 
         function updateSourceLabel() {
+            const all = document.querySelectorAll('.source-option');
             const checked = [...document.querySelectorAll('.source-option input:checked')];
             const label = document.getElementById('source-dropdown-label');
-            if (checked.length === 2) label.textContent = '全部來源';
+            if (checked.length === all.length) label.textContent = '全部來源';
             else if (checked.length === 0) label.textContent = '未選擇';
             else label.textContent = checked.map(cb => cb.closest('.source-option').textContent.trim()).join('、');
         }
 
+        // ========== 手機抽屜 / 圖例 ==========
+        function setDrawer(open) {
+            document.getElementById('sidebar').classList.toggle('mobile-active', open);
+            document.body.classList.toggle('drawer-open', open);
+        }
+        function closeDrawer() { setDrawer(false); }
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('mobile-active');
-            sidebar.style.display = sidebar.classList.contains('mobile-active') ? 'flex' : 'none';
+            setDrawer(!document.getElementById('sidebar').classList.contains('mobile-active'));
+        }
+        function toggleLegend() {
+            const legend = document.getElementById('map-legend');
+            const open = legend.classList.toggle('open');
+            legend.querySelector('.legend-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
         }
 
         function saveCurrentTime() {
@@ -791,7 +1168,7 @@
             { id: "1000035", label: "物件用途" },
             { id: "1000034", label: "物件型態" },
             { id: "1000037", label: "物件類別" },
-            { id: "1000047", label: "格局" },
+            { id: "1000047", label: "格局", isLayout: true },
             { id: "1000043", label: "所在樓層" },
             { id: "1000044", label: "總樓層" },
             { id: "1000030", label: "月租金", currency: true },
@@ -821,83 +1198,97 @@
         ];
 
         // 優式聯盟：item 已經過 map() 轉換成 EID-keyed 形式
-        // 可顯示的欄位就是 showInfoWindow 已顯示的 + 公開物件資訊
+        // 可顯示的欄位就是資訊窗已顯示的 + 公開物件資訊
         const WUOHOME_PUBLIC_FIELDS = [
             { id: EID.STATUS,  label: "狀態" },
             { id: EID.TITLE,   label: "案名" },
             { id: EID.ADDR,    label: "地址" },
             { id: EID.USAGE,   label: "物件用途" },
-            { id: EID.LAYOUT,  label: "格局" },
+            { id: EID.LAYOUT,  label: "格局", isLayout: true },
             { id: EID.PRICE,   label: "月租金", currency: true },
             { id: EID.LINK_591,label: "591連結", isLink: true },
         ];
 
+        // 回傳已跳脫、可直接放進 HTML 的字串；沒有值回 null
         function formatFieldValue(val, def) {
             if (val === null || val === undefined) return null;
             if (def.isArray) {
-                if (Array.isArray(val)) return val.filter(Boolean).join('、') || null;
-                if (typeof val === 'string') return val.replace(/\|/g, '、') || null;
-                return null;
+                let t = '';
+                if (Array.isArray(val)) t = val.filter(Boolean).join('、');
+                else if (typeof val === 'string') t = val.replace(/\|/g, '、');
+                return t ? escapeHtml(t) : null;
             }
             if (def.currency) {
-                const n = parseFloat(val);
-                if (isNaN(n) || n === 0) return null;
-                return '$' + n.toLocaleString();
+                const n = toNumber(val);
+                if (n === 0) return null;
+                return escapeHtml('$' + n.toLocaleString());
             }
             if (def.isLink) {
-                const s = String(val || '').trim();
-                if (!s || !s.startsWith('http')) return null;
-                return `<a href="${s}" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">${s}</a>`;
+                const u = safeHttpUrl(val);
+                if (!u) return null;
+                return `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" class="modal-link">${escapeHtml(u)}</a>`;
+            }
+            if (def.isLayout) {
+                const t = formatLayout(val);
+                return t ? escapeHtml(t) : null;
             }
             const s = String(val).trim();
-            return s || null;
+            return s ? escapeHtml(s) : null;
         }
 
-        function openDetailModal(item) {
-            const isAlliance = item._isAlliance;
+        function openDetailModal(itemId) {
+            const item = infoItems.get(itemId);
+            if (!item) return;
+            const isAlliance = !!item._isAlliance;
+            const source = getSourceMeta(item);
             const fields = isAlliance ? WUOHOME_PUBLIC_FIELDS : YONGCE_PUBLIC_FIELDS;
             const title = item[EID.TITLE] || '(未命名)';
-            const company = isAlliance ? (item._allianceCompany || '窩的家') : '永策不動產';
+            const company = isAlliance ? source.label : '永策不動產';
 
             let rows = '';
             fields.forEach(def => {
-                const raw = item[def.id];
-                const formatted = formatFieldValue(raw, def);
+                const formatted = formatFieldValue(item[def.id], def);
                 if (!formatted) return;
-                rows += `<tr><td>${def.label}</td><td>${formatted}</td></tr>`;
+                rows += `<tr><td>${escapeHtml(def.label)}</td><td>${formatted}</td></tr>`;
             });
 
-            // 永策物件：從子表格 _subtable_1000109 組業務聯絡行
-            // Worker 已過濾，每 row 只剩 1000053(姓名) + 1000054(電話)，email 不在其中
-            let agentRows = '';
-            if (!isAlliance) {
+            // 業務聯絡行：永策從子表格（Worker 已過濾，只剩姓名＋電話）；友店從 _allianceAgents
+            const agentList = [];
+            if (isAlliance) {
+                (item._allianceAgents || []).forEach(a => agentList.push([a.name, a.phone]));
+            } else {
                 const subData = item[EID.SUB_DEV];
                 if (subData && typeof subData === 'object') {
                     Object.values(subData).forEach(row => {
-                        const name = (row[EID.DEV_NAME] || '').trim();
-                        const phone = (row[EID.DEV_PHONE] || '').trim();
-                        if (!name && !phone) return;
-                        const display = name
-                            ? (phone ? `${name}　<a href="tel:${phone}" style="color:#2563eb;">${phone}</a>` : name)
-                            : phone;
-                        agentRows += `<tr><td>業務聯絡</td><td>${display}</td></tr>`;
+                        if (row && typeof row === 'object') agentList.push([row[EID.DEV_NAME], row[EID.DEV_PHONE]]);
                     });
                 }
             }
+            let agentRows = '';
+            agentList.forEach(([n, p]) => {
+                const rawName = String(n || '').trim();
+                const name = rawName.includes('@') ? '聯絡業務' : rawName;
+                const tel = sanitizePhone(p);
+                if (!name && !tel) return;
+                const display = name
+                    ? (tel ? `${escapeHtml(name)}　<a href="tel:${escapeHtml(tel)}" class="modal-link">${escapeHtml(tel)}</a>` : escapeHtml(name))
+                    : `<a href="tel:${escapeHtml(tel)}" class="modal-link">${escapeHtml(tel)}</a>`;
+                agentRows += `<tr><td>業務聯絡</td><td>${display}</td></tr>`;
+            });
 
             const badge = isAlliance
-                ? `<div class="modal-badge"><i class="fas fa-building" style="font-size:10px;"></i> ${company}</div>`
-                : `<div class="modal-badge" style="background:#b99f6b;"><i class="fas fa-home" style="font-size:10px;"></i> ${company}</div>`;
+                ? `<div class="modal-badge" style="--source-color:${escapeHtml(source.color)};"><i class="fas fa-building" style="font-size:10px;"></i> ${escapeHtml(company)}</div>`
+                : `<div class="modal-badge"><i class="fas fa-home" style="font-size:10px;"></i> ${escapeHtml(company)}</div>`;
 
             const allRows = rows + agentRows;
 
             // 永策物件才顯示「在 Ragic 開啟」連結；聯盟物件是 ap15 別人後台，不加
             const ragicLinkHtml = (!isAlliance && item._ragicId)
                 ? `<div style="margin-top:16px; text-align:center;">
-                     <a href="https://ap16.ragic.com/YongCe/property-data-kept/1/${item._ragicId}"
+                     <a href="https://ap16.ragic.com/YongCe/property-data-kept/1/${encodeURIComponent(item._ragicId)}"
                         target="_blank" rel="noopener"
                         style="display:inline-flex; align-items:center; gap:6px;
-                               background:#9B0C23; color:white; text-decoration:none;
+                               background:var(--brand); color:white; text-decoration:none;
                                padding:8px 18px; border-radius:6px; font-size:13px; font-weight:bold;">
                        <i class="fas fa-external-link-alt"></i> 在 Ragic 開啟此案件 ↗
                      </a>
@@ -906,19 +1297,25 @@
 
             document.getElementById('detail-modal-content').innerHTML = `
                 ${badge}
-                <h2>${title}</h2>
+                <h2>${escapeHtml(title)} ${statusTagHtml(item)}</h2>
                 <table>${allRows || '<tr><td colspan="2" style="color:#9ca3af;">無公開欄位資料</td></tr>'}</table>
-                <p style="margin-top:16px; font-size:11px; color:#d1d5db; text-align:right;">唯讀 · 僅顯示公開資訊</p>
+                <p style="margin-top:16px; font-size:11px; color:#9ca3af; text-align:right;">唯讀 · 僅顯示公開資訊</p>
                 ${ragicLinkHtml}
             `;
-            document.getElementById('detail-modal-overlay').classList.add('open');
+            lastFocusEl = document.activeElement;
+            const overlay = document.getElementById('detail-modal-overlay');
+            overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
+            const closeBtn = overlay.querySelector('.modal-close');
+            if (closeBtn) closeBtn.focus();
         }
 
         function closeDetailModal(e, force) {
             if (!force && e && e.target !== document.getElementById('detail-modal-overlay')) return;
             document.getElementById('detail-modal-overlay').classList.remove('open');
             document.body.style.overflow = '';
+            if (lastFocusEl && lastFocusEl.focus) { try { lastFocusEl.focus(); } catch (err) {} }
+            lastFocusEl = null;
         }
 
         document.addEventListener('keydown', e => {
@@ -926,7 +1323,7 @@
         });
 
     </script>
-<style>/* 問題回報按鈕抬高到右下角圖例上方，不蓋住圖例 */#wh-bug-report-btn{bottom:160px !important}</style>
+<style>/* 問題回報按鈕抬高到右下角圖例上方，不蓋住圖例（僅桌面；手機規則見上方 media query） */@media(min-width:769px){#wh-bug-report-btn{bottom:160px !important}}</style>
 <script src="bug-report.js" defer></script>
 </body>
 </html>
